@@ -24,7 +24,15 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-zinc-950 text-zinc-100 antialiased">{children}</body>
+      <body className="min-h-screen bg-[#0a0a0a] text-[#f5f5f5] antialiased selection:bg-[#052e16] selection:text-[#4ade80]">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-[#22c55e] focus:px-3.5 focus:py-2 focus:text-xs focus:font-semibold focus:text-[#0a0a0a] focus:outline-none"
+        >
+          Skip to main content
+        </a>
+        {children}
+      </body>
     </html>
   );
 }

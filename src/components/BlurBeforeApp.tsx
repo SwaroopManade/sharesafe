@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { AlertTriangle, X } from "lucide-react";
 import { ConfirmDiscardDialog } from "@/components/ConfirmDiscardDialog";
 import { EditorCanvas, type ZoomSetting } from "@/components/EditorCanvas";
 import { EditorToolbar } from "@/components/EditorToolbar";
@@ -44,7 +45,12 @@ type PendingDiscardAction =
   | { kind: "clear-image" }
   | { kind: "load-file"; file: File };
 
-export function BlurBeforeApp() {
+interface BlurBeforeAppProps {
+  intakeHero?: ReactNode;
+  intakeFooter?: ReactNode;
+}
+
+export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) {
   const [session, setSession] = useState<ActiveImageSession | null>(null);
   const sessionRef = useRef<ActiveImageSession | null>(null);
 
@@ -85,14 +91,12 @@ export function BlurBeforeApp() {
     sessionRef.current = session;
   }, [session]);
 
-  // Cleanup active decoded ImageBitmap / object URLs on unmount (FR-042)
   useEffect(() => {
     return () => {
       sessionRef.current?.decoded.release();
     };
   }, []);
 
-  // Detect browser capabilities (WebP export support, OffscreenCanvas, Clipboard read)
   useEffect(() => {
     let active = true;
     detectBrowserCapabilities().then((caps) => {
@@ -106,7 +110,6 @@ export function BlurBeforeApp() {
     };
   }, []);
 
-  // Warn before page unload when unsaved redaction edits exist (FR-043)
   useEffect(() => {
     if (!session || regions.length === 0) return;
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -128,7 +131,6 @@ export function BlurBeforeApp() {
         const validated = await validateImageFile(file);
         const decoded = await decodeSourceImage(file);
 
-        // Release previous session resources immediately after new image succeeds
         sessionRef.current?.decoded.release();
 
         const nextSession: ActiveImageSession = {
@@ -183,7 +185,6 @@ export function BlurBeforeApp() {
     [session, regions.length, loadFileDirect],
   );
 
-  // Global clipboard paste support (FR-012)
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
       const items = e.clipboardData?.items;
@@ -224,7 +225,6 @@ export function BlurBeforeApp() {
     }
   };
 
-  // Keyboard shortcuts for Undo/Redo, Delete, and keyboard-accessible region nudging (NFR-016)
   useEffect(() => {
     if (!session) return;
 
@@ -457,12 +457,18 @@ export function BlurBeforeApp() {
 
   if (!session) {
     return (
-      <IntakeDropzone
-        isLoading={isLoadingImage}
-        errorMessage={intakeError}
-        onSelectFile={requestFileLoad}
-        onPasteRequest={canClipboardRead ? handlePasteButton : undefined}
-      />
+      <div className="space-y-12">
+        <div className="space-y-6">
+          {intakeHero}
+          <IntakeDropzone
+            isLoading={isLoadingImage}
+            errorMessage={intakeError}
+            onSelectFile={requestFileLoad}
+            onPasteRequest={canClipboardRead ? handlePasteButton : undefined}
+          />
+        </div>
+        {intakeFooter}
+      </div>
     );
   }
 
@@ -502,15 +508,19 @@ export function BlurBeforeApp() {
       {transientNotice && (
         <div
           role="status"
-          className="flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-xs text-amber-200"
+          className="animate-banner-in flex items-center justify-between gap-3 rounded-lg border border-[#92400e] bg-[#1c1200] px-4 py-2.5 text-xs text-[#fbbf24]"
         >
-          <span>{transientNotice}</span>
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={14} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />
+            <span>{transientNotice}</span>
+          </div>
           <button
             type="button"
+            aria-label="Dismiss notice"
             onClick={() => setTransientNotice(null)}
-            className="text-amber-100 underline hover:text-white"
+            className="rounded p-0.5 text-[#f59e0b] transition-colors hover:text-[#fbbf24] focus-visible:outline-2 focus-visible:outline-[#f59e0b]"
           >
-            Dismiss
+            <X size={14} strokeWidth={1.75} aria-hidden="true" />
           </button>
         </div>
       )}
@@ -518,13 +528,14 @@ export function BlurBeforeApp() {
       {intakeError && (
         <div
           role="alert"
-          className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-2.5 text-xs text-rose-200"
+          className="animate-banner-in flex items-center gap-2 rounded-lg border border-[#7f1d1d] bg-[#1f0a0a] px-4 py-2.5 text-xs text-[#f87171]"
         >
-          {intakeError}
+          <AlertTriangle size={14} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />
+          <span>{intakeError}</span>
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_280px] xl:grid-cols-[minmax(0,1fr)_300px]">
         <div className="space-y-3">
           <EditorCanvas
             decodedImage={session.decoded}
@@ -539,41 +550,59 @@ export function BlurBeforeApp() {
             onTransientNotice={setTransientNotice}
           />
 
-          {/* Status bar & keyboard-accessible region list (NFR-016) */}
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3.5 py-2.5 text-xs text-zinc-400">
-            <span className="truncate">
-              <strong className="text-zinc-200">{session.filename}</strong> ·{" "}
-              {session.decoded.width} × {session.decoded.height} px ·{" "}
-              {formatByteSize(session.byteSize)}
-            </span>
-            <span>
-              Use arrow keys to nudge selected box · <kbd className="rounded bg-zinc-800 px-1 text-zinc-200">Del</kbd> to remove · Edits live in memory only
-            </span>
+          {/* Status bar (uiux-component-patterns Section 6) */}
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#2e2e2e] bg-[#111111] px-4 py-2.5 text-xs text-[#666666]">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="max-w-[200px] truncate font-medium text-[#a3a3a3]" title={session.filename}>
+                {session.filename}
+              </span>
+              <span className="text-[#2e2e2e]" aria-hidden="true">
+                ·
+              </span>
+              <span>
+                {session.decoded.width} × {session.decoded.height}
+              </span>
+              <span className="text-[#2e2e2e]" aria-hidden="true">
+                ·
+              </span>
+              <span>{formatByteSize(session.byteSize)}</span>
+            </div>
+            <div className="shrink-0 text-[#666666]">
+              ↑↓←→ nudge ·{" "}
+              <kbd className="rounded border border-[#2e2e2e] bg-[#1a1a1a] px-1 text-[11px] text-[#a3a3a3]">
+                Del
+              </kbd>{" "}
+              remove · edits in memory only
+            </div>
           </div>
 
+          {/* Region chips (uiux-component-patterns Section 7) */}
           {regions.length > 0 && (
-            <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                Redaction Regions ({regions.length})
+            <div className="rounded-xl border border-[#2e2e2e] bg-[#111111] p-3">
+              <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-[#666666]">
+                Regions ({regions.length})
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {regions.map((r, idx) => {
                   const selected = r.id === selectedRegionId;
+                  const isSolid = r.mode === "solid";
                   return (
                     <div
                       key={r.id}
-                      className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs ${
+                      className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-all duration-150 ${
                         selected
-                          ? "border-emerald-400 bg-emerald-500/15 text-emerald-200"
-                          : "border-zinc-700 bg-zinc-800/80 text-zinc-300"
+                          ? isSolid
+                            ? "border-[#166534] bg-[#052e16] text-[#4ade80]"
+                            : "border-[#92400e] bg-[#1c1200] text-[#fbbf24]"
+                          : "border-[#2e2e2e] bg-[#1a1a1a] text-[#666666] hover:border-[#3d3d3d] hover:text-[#a3a3a3]"
                       }`}
                     >
                       <button
                         type="button"
                         onClick={() => setSelectedRegionId(r.id)}
-                        className="font-medium hover:text-white focus-visible:outline-2 focus-visible:outline-emerald-400"
+                        className="transition-colors focus-visible:outline-2 focus-visible:outline-[#22c55e]"
                       >
-                        #{idx + 1} {r.mode === "solid" ? "Solid" : "Blur"}
+                        #{idx + 1} {isSolid ? "Solid" : "Blur"}
                       </button>
                       <button
                         type="button"
@@ -582,9 +611,9 @@ export function BlurBeforeApp() {
                           const next = regions.filter((item) => item.id !== r.id);
                           handleCommitRegions(next, selected ? null : selectedRegionId);
                         }}
-                        className="ml-1 rounded px-1 text-zinc-400 hover:bg-zinc-700 hover:text-white focus-visible:outline-2 focus-visible:outline-emerald-400"
+                        className="ml-0.5 rounded p-0.5 opacity-60 transition-opacity hover:opacity-100 focus-visible:outline-2 focus-visible:outline-[#22c55e]"
                       >
-                        ×
+                        <X size={11} strokeWidth={2} aria-hidden="true" />
                       </button>
                     </div>
                   );
@@ -643,4 +672,3 @@ export function BlurBeforeApp() {
     </div>
   );
 }
-

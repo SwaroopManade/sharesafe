@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { AlertTriangle, ArrowLeft, ShieldCheck } from "lucide-react";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { APP_CONFIG } from "@/config/app";
@@ -42,41 +43,48 @@ const FAQ_ITEMS = [
 
 export default function PrivacyPage() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-[#0a0a0a]">
       <SiteHeader activePath="/privacy" />
 
-      <main className="mx-auto w-full max-w-4xl flex-1 space-y-10 px-4 py-10 sm:px-6 sm:py-14">
+      <main
+        id="main-content"
+        className="mx-auto w-full max-w-4xl flex-1 space-y-10 px-4 py-10 sm:px-6 sm:py-12"
+      >
         <div className="space-y-3">
           <Link
             href="/"
-            className="inline-flex text-sm font-medium text-emerald-400 hover:underline focus-visible:outline-2 focus-visible:outline-emerald-400"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#4ade80] transition-colors hover:text-[#22c55e] hover:underline focus-visible:outline-2 focus-visible:outline-[#22c55e]"
           >
-            ← Back to {APP_CONFIG.name} Editor
+            <ArrowLeft size={14} strokeWidth={1.75} aria-hidden="true" />
+            Back to {APP_CONFIG.name} Editor
           </Link>
-          <h1 className="text-3xl font-semibold tracking-tight text-white">
+          <h1 className="text-2xl font-bold tracking-[-0.03em] text-[#f5f5f5] sm:text-3xl">
             Privacy Scope, Redaction Guide &amp; FAQ
           </h1>
-          <p className="text-sm leading-relaxed text-zinc-300 sm:text-base">
+          <p className="text-sm leading-relaxed text-[#a3a3a3]">
             Clear technical details on how {APP_CONFIG.name} handles your files, what metadata
             cleaning covers, and best practices for irreversible redaction.
           </p>
         </div>
 
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5">
-            <h2 className="text-base font-semibold text-emerald-100">
-              Recommended: Solid Cover
-            </h2>
-            <p className="mt-2 text-xs leading-relaxed text-emerald-200/90">
+          <div className="rounded-xl border border-[#166534] bg-[#052e16] p-5">
+            <div className="flex items-center gap-2 text-sm font-semibold text-[#4ade80]">
+              <ShieldCheck size={16} strokeWidth={1.75} aria-hidden="true" />
+              <h2>Recommended: Solid Cover</h2>
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-[#a3a3a3]">
               Replaces every pixel inside the selected rectangle with a single opaque color and
               flattens the final export. Ideal for emails, phone numbers, financial totals, and IDs.
             </p>
           </div>
-          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5">
-            <h2 className="text-base font-semibold text-amber-100">
-              Visual Treatment: Blur
-            </h2>
-            <p className="mt-2 text-xs leading-relaxed text-amber-200/90">
+
+          <div className="rounded-xl border border-[#92400e] bg-[#1c1200] p-5">
+            <div className="flex items-center gap-2 text-sm font-semibold text-[#fbbf24]">
+              <AlertTriangle size={16} strokeWidth={1.75} aria-hidden="true" />
+              <h2>Visual Treatment: Blur</h2>
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-[#a3a3a3]">
               Applies deterministic isolated pixel blurring to obscure faces or low-sensitivity
               context. Never rely on blur alone when short digits or text must remain unrecoverable.
             </p>
@@ -84,17 +92,17 @@ export default function PrivacyPage() {
         </section>
 
         <section aria-labelledby="faq-heading" className="space-y-4">
-          <h2 id="faq-heading" className="text-xl font-semibold text-white">
+          <h2 id="faq-heading" className="text-base font-semibold tracking-tight text-[#f5f5f5]">
             Frequently Asked Questions
           </h2>
           <div className="space-y-3">
             {FAQ_ITEMS.map((item) => (
               <article
                 key={item.q}
-                className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5"
+                className="rounded-xl border border-[#2e2e2e] bg-[#111111] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
               >
-                <h3 className="text-sm font-semibold text-white">{item.q}</h3>
-                <p className="mt-2 text-xs leading-relaxed text-zinc-300 sm:text-sm">{item.a}</p>
+                <h3 className="text-sm font-semibold text-[#f5f5f5]">{item.q}</h3>
+                <p className="mt-2 text-xs leading-relaxed text-[#a3a3a3] sm:text-[13px]">{item.a}</p>
               </article>
             ))}
           </div>

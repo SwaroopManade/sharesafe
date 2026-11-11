@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AlertTriangle, Download, Loader2, Lock, RotateCcw, ShieldCheck } from "lucide-react";
 import { APP_CONFIG } from "@/config/app";
 import { IMAGE_LIMITS } from "@/config/limits";
 import type { SupportedImageMime } from "@/lib/image-engine";
@@ -51,205 +52,254 @@ export function ExportPanel({
   const showJpegAlphaWarning = outputMime === "image/jpeg" && mayHaveAlpha;
 
   return (
-    <aside className="space-y-5 rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 sm:p-5">
-      <div>
-        <h2 className="text-base font-semibold text-white">Export Settings</h2>
-        <p className="mt-1 text-xs text-zinc-400">
-          Original: {sourceWidth} × {sourceHeight} px ({APP_CONFIG.mimeToLabel[sourceMime]})
-        </p>
-      </div>
-
-      {/* Metadata Cleaning Status (FR-031, FR-033) */}
-      <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-3 text-xs text-emerald-200">
-        <div className="flex items-center justify-between gap-2 font-medium text-emerald-100">
-          <span>Metadata cleaning</span>
-          <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] uppercase">
-            Enabled
-          </span>
-        </div>
-        <p className="mt-1 leading-relaxed text-emerald-200/90">
-          Re-encodes the image locally to strip common EXIF &amp; GPS fields. Not a guarantee
-          against every hidden or steganographic payload.{" "}
-          <Link href="/privacy" className="underline hover:text-white">
-            Details
-          </Link>
-        </p>
-      </div>
-
-      {/* Resize Controls (FR-034 - FR-036) */}
-      <div className="space-y-2.5 border-t border-zinc-800 pt-4">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-zinc-300">
-            Resize (px)
-          </span>
-          <button
-            type="button"
-            onClick={onResetDimensions}
-            className="text-xs text-emerald-400 hover:underline focus-visible:outline-2 focus-visible:outline-emerald-400"
-          >
-            Reset to original
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2.5">
-          <label className="space-y-1 text-xs text-zinc-400">
-            <span>Width</span>
-            <input
-              type="number"
-              min={IMAGE_LIMITS.minOutputDimension}
-              max={IMAGE_LIMITS.maxOutputDimension}
-              value={resizeWidth}
-              onChange={(e) => onChangeResizeWidth(e.target.value)}
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
-            />
-          </label>
-
-          <label className="space-y-1 text-xs text-zinc-400">
-            <span>Height</span>
-            <input
-              type="number"
-              min={IMAGE_LIMITS.minOutputDimension}
-              max={IMAGE_LIMITS.maxOutputDimension}
-              value={resizeHeight}
-              onChange={(e) => onChangeResizeHeight(e.target.value)}
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:outline-none"
-            />
-          </label>
-        </div>
-
-        <label className="flex cursor-pointer items-center gap-2 text-xs text-zinc-300">
-          <input
-            type="checkbox"
-            checked={lockAspectRatio}
-            onChange={onToggleAspectLock}
-            className="h-4 w-4 rounded border-zinc-600 bg-zinc-950 accent-emerald-500"
-          />
-          Preserve aspect ratio
-        </label>
-      </div>
-
-      {/* Format Selection (FR-037, Section 11) */}
-      <div className="space-y-2.5 border-t border-zinc-800 pt-4">
-        <span className="block text-xs font-semibold uppercase tracking-wider text-zinc-300">
-          Output Format
-        </span>
-        <div className="grid grid-cols-3 gap-2">
-          {APP_CONFIG.supportedExportMimes.map((mime) => {
-            const supported = supportedExportMimes.includes(mime);
-            const active = outputMime === mime;
-            return (
-              <button
-                key={mime}
-                type="button"
-                disabled={!supported}
-                aria-pressed={active}
-                title={
-                  supported
-                    ? `Export as ${APP_CONFIG.mimeToLabel[mime]}`
-                    : `${APP_CONFIG.mimeToLabel[mime]} encoding is not supported by this browser`
-                }
-                onClick={() => onChangeOutputMime(mime)}
-                className={`rounded-lg px-2.5 py-2 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-emerald-400 ${
-                  active
-                    ? "bg-emerald-500 text-zinc-950"
-                    : supported
-                      ? "border border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
-                      : "cursor-not-allowed border border-zinc-800 bg-zinc-950 text-zinc-600"
-                }`}
-              >
-                {APP_CONFIG.mimeToLabel[mime]}
-              </button>
-            );
-          })}
-        </div>
-
-        {!supportedExportMimes.includes("image/webp") && (
-          <p className="text-[11px] text-zinc-400">
-            WebP encoding is unavailable in this browser; JPEG and PNG remain supported.
+    <aside className="flex flex-col justify-between space-y-5 rounded-xl border border-[#2e2e2e] bg-[#111111] p-4 shadow-[0_1px_2px_rgba(0,0,0,0.5)] sm:p-5">
+      <div className="space-y-5">
+        {/* 1. Source orientation */}
+        <div>
+          <h2 className="text-sm font-semibold tracking-tight text-[#f5f5f5]">Export Settings</h2>
+          <p className="mt-1 text-xs text-[#666666]">
+            Source: {sourceWidth} × {sourceHeight} px · {APP_CONFIG.mimeToLabel[sourceMime]}
           </p>
-        )}
+        </div>
 
-        {showJpegAlphaWarning && (
-          <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-[11px] leading-relaxed text-amber-200">
-            JPEG does not support transparency. Any transparent areas will be flattened onto a white
-            background.
+        {/* 2. Metadata cleaning trust signal */}
+        <div className="rounded-lg border border-[#166534] bg-[#052e16] px-3.5 py-3 text-xs">
+          <div className="flex items-center justify-between gap-2 font-medium text-[#4ade80]">
+            <span className="inline-flex items-center gap-1.5">
+              <ShieldCheck size={14} strokeWidth={1.75} aria-hidden="true" />
+              Metadata cleaning
+            </span>
+            <span className="rounded border border-[#166534] bg-[#052e16] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#22c55e]">
+              Active
+            </span>
+          </div>
+          <p className="mt-1.5 leading-relaxed text-[#a3a3a3]">
+            Re-encodes locally to strip common EXIF &amp; GPS tags (not a forensic guarantee).{" "}
+            <Link
+              href="/privacy"
+              className="text-[#4ade80] underline underline-offset-2 hover:text-[#f5f5f5]"
+            >
+              Details
+            </Link>
           </p>
-        )}
-      </div>
+        </div>
 
-      {/* Compression & Quality Controls (FR-038 - FR-040) */}
-      <div className="space-y-3 border-t border-zinc-800 pt-4">
-        {isLossy ? (
-          <>
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold uppercase tracking-wider text-zinc-300">
-                Compression Quality
+        <div className="-mx-4 h-px bg-[#2e2e2e] sm:-mx-5" aria-hidden="true" />
+
+        {/* 3. Resize controls */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-[#666666]">
+              Resize (px)
+            </span>
+            <button
+              type="button"
+              onClick={onResetDimensions}
+              className="inline-flex items-center gap-1 text-xs font-medium text-[#4ade80] transition-colors duration-150 hover:text-[#22c55e] focus-visible:outline-2 focus-visible:outline-[#22c55e]"
+            >
+              <RotateCcw size={11} strokeWidth={1.75} aria-hidden="true" />
+              Original
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2.5">
+            <label className="block space-y-1.5">
+              <span className="text-[11px] font-medium uppercase tracking-wider text-[#666666]">
+                Width
               </span>
-              <span className="font-mono text-zinc-200">{Math.round(quality * 100)}%</span>
-            </div>
+              <input
+                type="number"
+                min={IMAGE_LIMITS.minOutputDimension}
+                max={IMAGE_LIMITS.maxOutputDimension}
+                value={resizeWidth}
+                onChange={(e) => onChangeResizeWidth(e.target.value)}
+                className="w-full rounded-lg border border-[#2e2e2e] bg-[#1a1a1a] px-3 py-2 text-sm text-[#f5f5f5] placeholder:text-[#666666] transition-colors duration-150 hover:border-[#3d3d3d] focus:border-[#166534] focus:outline-none focus:ring-1 focus:ring-[#166534]/40"
+              />
+            </label>
 
-            <div className="grid grid-cols-3 gap-1.5">
-              {APP_CONFIG.qualityPresets.map((preset) => {
-                const isActive = Math.abs(quality - preset.quality) < 0.02;
-                return (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    aria-pressed={isActive}
-                    onClick={() => onChangeQuality(preset.quality)}
-                    className={`rounded-lg px-2 py-1.5 text-[11px] font-medium transition focus-visible:outline-2 focus-visible:outline-emerald-400 ${
-                      isActive
-                        ? "bg-zinc-200 text-zinc-950"
-                        : "border border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
-                    }`}
-                  >
-                    {preset.label}
-                  </button>
-                );
-              })}
-            </div>
+            <label className="block space-y-1.5">
+              <span className="text-[11px] font-medium uppercase tracking-wider text-[#666666]">
+                Height
+              </span>
+              <input
+                type="number"
+                min={IMAGE_LIMITS.minOutputDimension}
+                max={IMAGE_LIMITS.maxOutputDimension}
+                value={resizeHeight}
+                onChange={(e) => onChangeResizeHeight(e.target.value)}
+                className="w-full rounded-lg border border-[#2e2e2e] bg-[#1a1a1a] px-3 py-2 text-sm text-[#f5f5f5] placeholder:text-[#666666] transition-colors duration-150 hover:border-[#3d3d3d] focus:border-[#166534] focus:outline-none focus:ring-1 focus:ring-[#166534]/40"
+              />
+            </label>
+          </div>
 
-            <input
-              type="range"
-              aria-label="Compression quality percentage"
-              min={10}
-              max={100}
-              step={1}
-              value={Math.round(quality * 100)}
-              onChange={(e) => onChangeQuality(Number(e.target.value) / 100)}
-              className="w-full accent-emerald-500"
-            />
-            <p className="text-[11px] text-zinc-400">
-              Lower {APP_CONFIG.mimeToLabel[outputMime]} quality shrinks file size but can reduce
-              sharpness around text.
+          <label className="flex cursor-pointer items-center gap-2 select-none">
+            <span className="relative flex items-center justify-center">
+              <input
+                type="checkbox"
+                checked={lockAspectRatio}
+                onChange={onToggleAspectLock}
+                className="peer sr-only"
+              />
+              <span className="h-4 w-4 rounded border border-[#2e2e2e] bg-[#1a1a1a] transition-colors duration-150 peer-checked:border-[#22c55e] peer-checked:bg-[#22c55e] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#22c55e]" />
+              <Lock
+                size={10}
+                strokeWidth={2.25}
+                aria-hidden="true"
+                className="pointer-events-none absolute text-[#0a0a0a] opacity-0 transition-opacity duration-150 peer-checked:opacity-100"
+              />
+            </span>
+            <span className="text-xs text-[#a3a3a3]">Preserve aspect ratio</span>
+          </label>
+        </div>
+
+        <div className="-mx-4 h-px bg-[#2e2e2e] sm:-mx-5" aria-hidden="true" />
+
+        {/* 4. Format selector */}
+        <div className="space-y-2.5">
+          <span className="block text-[11px] font-medium uppercase tracking-wider text-[#666666]">
+            Output Format
+          </span>
+          <div className="grid grid-cols-3 gap-1.5">
+            {APP_CONFIG.supportedExportMimes.map((mime) => {
+              const supported = supportedExportMimes.includes(mime);
+              const active = outputMime === mime;
+              return (
+                <button
+                  key={mime}
+                  type="button"
+                  disabled={!supported}
+                  aria-pressed={active}
+                  title={
+                    supported
+                      ? `Export as ${APP_CONFIG.mimeToLabel[mime]}`
+                      : `${APP_CONFIG.mimeToLabel[mime]} encoding is not supported by this browser`
+                  }
+                  onClick={() => onChangeOutputMime(mime)}
+                  className={`rounded-lg py-2 text-xs font-semibold transition-all duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e] ${
+                    active
+                      ? "bg-[#22c55e] text-[#0a0a0a]"
+                      : supported
+                        ? "border border-[#2e2e2e] bg-[#1a1a1a] text-[#a3a3a3] hover:border-[#3d3d3d] hover:text-[#f5f5f5]"
+                        : "cursor-not-allowed border border-[#1a1a1a] bg-transparent text-[#666666] opacity-40"
+                  }`}
+                >
+                  {APP_CONFIG.mimeToLabel[mime]}
+                </button>
+              );
+            })}
+          </div>
+
+          {!supportedExportMimes.includes("image/webp") && (
+            <p className="text-[11px] text-[#666666]">
+              WebP encoding is unavailable in this browser; JPEG and PNG remain supported.
             </p>
-          </>
-        ) : (
-          <p className="text-xs leading-relaxed text-zinc-400">
-            PNG uses lossless compression for crisp screenshots and preserves transparency, though
-            photo files may be larger than JPEG/WebP.
-          </p>
-        )}
+          )}
+
+          {showJpegAlphaWarning && (
+            <div className="flex items-start gap-2 rounded-lg border border-[#92400e] bg-[#1c1200] px-3 py-2.5 text-[11px] leading-relaxed text-[#fbbf24]">
+              <AlertTriangle size={14} strokeWidth={1.75} className="mt-0.5 shrink-0" aria-hidden="true" />
+              <span>
+                JPEG does not support transparency. Transparent regions will be flattened onto white.
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="-mx-4 h-px bg-[#2e2e2e] sm:-mx-5" aria-hidden="true" />
+
+        {/* 5. Quality / Compression controls */}
+        <div className="space-y-3">
+          {isLossy ? (
+            <>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-[#666666]">
+                  Quality
+                </span>
+                <span className="font-mono text-[#a3a3a3]">{Math.round(quality * 100)}%</span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-1.5">
+                {APP_CONFIG.qualityPresets.map((preset) => {
+                  const isActive = Math.abs(quality - preset.quality) < 0.02;
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      aria-pressed={isActive}
+                      onClick={() => onChangeQuality(preset.quality)}
+                      className={`rounded-lg border px-2 py-1.5 text-[11px] font-medium transition-all duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-[#22c55e] ${
+                        isActive
+                          ? "border-[#3d3d3d] bg-[#242424] text-[#f5f5f5]"
+                          : "border-[#2e2e2e] bg-[#1a1a1a] text-[#666666] hover:border-[#3d3d3d] hover:text-[#a3a3a3]"
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="space-y-1.5">
+                <input
+                  type="range"
+                  aria-label="Compression quality percentage"
+                  min={10}
+                  max={100}
+                  step={1}
+                  value={Math.round(quality * 100)}
+                  onChange={(e) => onChangeQuality(Number(e.target.value) / 100)}
+                  className="h-1.5 w-full cursor-pointer rounded-full bg-[#2e2e2e] accent-[#22c55e]"
+                />
+                <div className="flex justify-between text-[10px] text-[#666666]">
+                  <span>Smaller file</span>
+                  <span>Higher quality</span>
+                </div>
+              </div>
+              <p className="text-[11px] leading-relaxed text-[#666666]">
+                Lower {APP_CONFIG.mimeToLabel[outputMime]} quality reduces file size but may soften
+                fine text.
+              </p>
+            </>
+          ) : (
+            <p className="text-xs leading-relaxed text-[#666666]">
+              PNG uses lossless compression for crisp screenshots and preserves transparency, though
+              photo files may be larger than JPEG/WebP.
+            </p>
+          )}
+        </div>
       </div>
 
-      {exportError && (
-        <div
-          role="alert"
-          className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-3 text-xs text-rose-200"
-        >
-          {exportError}
-        </div>
-      )}
+      {/* 6 & 7. Error alert + Primary Export CTA */}
+      <div className="space-y-3 pt-1">
+        {exportError && (
+          <div
+            role="alert"
+            className="animate-banner-in flex items-start gap-2 rounded-lg border border-[#7f1d1d] bg-[#1f0a0a] px-3 py-2.5 text-xs text-[#f87171]"
+          >
+            <AlertTriangle size={14} strokeWidth={1.75} className="mt-0.5 shrink-0" aria-hidden="true" />
+            <span>{exportError}</span>
+          </div>
+        )}
 
-      <button
-        type="button"
-        disabled={isExporting}
-        onClick={onExport}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-zinc-950 shadow-sm transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400"
-      >
-        {isExporting ? "Flattening & Re-encoding..." : "Export & Preview Image"}
-      </button>
+        <button
+          type="button"
+          disabled={isExporting}
+          onClick={onExport}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#22c55e] px-5 py-2.5 text-sm font-semibold text-[#0a0a0a] transition-all duration-150 hover:bg-[#16a34a] hover:shadow-[0_0_20px_rgba(34,197,94,0.2)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e]"
+        >
+          {isExporting ? (
+            <>
+              <Loader2 size={16} strokeWidth={1.75} className="animate-spin" aria-hidden="true" />
+              Flattening &amp; Re-encoding...
+            </>
+          ) : (
+            <>
+              <Download size={16} strokeWidth={1.75} aria-hidden="true" />
+              Export &amp; Preview
+            </>
+          )}
+        </button>
+      </div>
     </aside>
   );
 }
-

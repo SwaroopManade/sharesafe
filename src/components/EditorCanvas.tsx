@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { APP_CONFIG } from "@/config/app";
 import { IMAGE_LIMITS } from "@/config/limits";
 import {
   createRegionId,
@@ -110,7 +109,6 @@ export function EditorCanvas({
     return () => observer.disconnect();
   }, []);
 
-  // Build a capped preview offscreen canvas once per loaded image so blur previews stay snappy
   const previewDims = useMemo(() => {
     const { width, height } = decodedImage;
     const maxDim = Math.max(width, height);
@@ -151,8 +149,6 @@ export function EditorCanvas({
   const displayWidth = Math.max(1, Math.round(decodedImage.width * effectiveScale));
   const displayHeight = Math.max(1, Math.round(decodedImage.height * effectiveScale));
 
-  // Regions currently shown on canvas (during active drag on a solid region we render live;
-  // during drag on a blur region we keep the base canvas smooth and show a live frosted guide overlay)
   const effectiveRegions = useMemo(() => {
     if (!interaction) return regions;
     if (interaction.kind === "draw") {
@@ -172,7 +168,6 @@ export function EditorCanvas({
     return regions.map((r) => (r.id === interaction.regionId ? interaction.draft : r));
   }, [regions, interaction]);
 
-  // Paint preview bitmap + committed redactions onto the visible canvas
   useEffect(() => {
     const canvas = canvasRef.current;
     const previewSource = previewSourceRef.current;
@@ -189,7 +184,6 @@ export function EditorCanvas({
     ctx.clearRect(0, 0, previewDims.width, previewDims.height);
     ctx.drawImage(previewSource, 0, 0, previewDims.width, previewDims.height);
 
-    // Exclude actively dragged blur box while mid-drag to keep 60fps pointer responsiveness
     const regionsToPaint =
       interaction && interaction.draft.mode === "blur" && interaction.kind !== "draw"
         ? effectiveRegions.filter((r) => r.id !== interaction.regionId)
@@ -341,7 +335,6 @@ export function EditorCanvas({
           IMAGE_LIMITS.minRedactionSourcePx,
         )
       ) {
-        // Ignore accidental tiny taps smaller than minimum source pixels
         const fallback = normalizePixelRect(
           { x: 0, y: 0, width: 0, height: 0 },
           decodedImage.width,
@@ -374,18 +367,19 @@ export function EditorCanvas({
   return (
     <div
       ref={viewportRef}
-      className="relative flex h-[55vh] min-h-[340px] max-h-[72vh] w-full items-center justify-center overflow-auto rounded-2xl border border-zinc-800 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px] bg-zinc-950 p-3"
+      className="relative flex h-[56vh] min-h-[340px] max-h-[74vh] w-full items-center justify-center overflow-auto rounded-xl border border-[#2e2e2e] bg-[#0a0a0a] bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] [background-size:20px_20px] p-3 shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
     >
       <div
         ref={stageRef}
+        tabIndex={0}
         role="application"
-        aria-label="Image redaction canvas. Drag across the image to draw a redaction rectangle, or use the toolbar controls."
+        aria-label="Image redaction canvas. Drag across the image to draw a redaction rectangle, or use Add Box and arrow keys."
         onPointerDown={handleStagePointerDown}
         onPointerMove={handleStagePointerMove}
         onPointerUp={finishInteraction}
         onPointerCancel={finishInteraction}
         style={{ width: `${displayWidth}px`, height: `${displayHeight}px` }}
-        className="relative shrink-0 touch-none select-none overflow-hidden rounded-sm shadow-2xl ring-1 ring-zinc-700/80 cursor-crosshair"
+        className="relative shrink-0 cursor-crosshair touch-none select-none overflow-hidden rounded-sm shadow-[0_4px_12px_rgba(0,0,0,0.6),0_1px_3px_rgba(0,0,0,0.4)] ring-1 ring-[#2e2e2e] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#22c55e]"
       >
         <canvas
           ref={canvasRef}
@@ -393,14 +387,14 @@ export function EditorCanvas({
           className="block h-full w-full"
         />
 
-        {/* Interactive region selection and touch-friendly resize handles (not burned into export) */}
         {overlayRegions.map((region) => {
           const isSelected = region.id === selectedRegionId;
+          const isSolid = region.mode === "solid";
           const isBlurDraft =
             interaction !== null &&
             ((interaction.kind === "draw" && interaction.draft.id === region.id) ||
               (interaction.kind !== "draw" && interaction.regionId === region.id)) &&
-            region.mode === "blur";
+            !isSolid;
 
           return (
             <div
@@ -412,18 +406,26 @@ export function EditorCanvas({
                 width: `${region.width * 100}%`,
                 height: `${region.height * 100}%`,
               }}
-              className={`absolute box-border cursor-move transition-shadow ${
-                isBlurDraft ? "backdrop-blur-md bg-white/10" : ""
+              className={`absolute box-border cursor-move transition-[box-shadow,ring-color] duration-150 ${
+                isBlurDraft ? "bg-white/10 backdrop-blur-md" : ""
               } ${
                 isSelected
-                  ? "ring-2 ring-emerald-400 ring-offset-1 ring-offset-zinc-950"
-                  : "ring-1 ring-white/40 hover:ring-emerald-300/80"
+                  ? isSolid
+                    ? "ring-2 ring-[#22c55e] ring-offset-1 ring-offset-[#0a0a0a]"
+                    : "ring-2 ring-[#f59e0b] ring-offset-1 ring-offset-[#0a0a0a]"
+                  : "ring-1 ring-white/25 hover:ring-[#a3a3a3]"
               }`}
             >
               {isSelected && (
                 <>
-                  <span className="pointer-events-none absolute -top-6 left-0 inline-flex items-center gap-1 rounded bg-zinc-900/95 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-emerald-300 ring-1 ring-emerald-400/50">
-                    {region.mode === "solid" ? "SOLID" : "BLUR"}
+                  <span
+                    className={`pointer-events-none absolute -top-6 left-0 inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-bold tracking-wider ${
+                      isSolid
+                        ? "border-[#166534] bg-[#052e16] text-[#4ade80]"
+                        : "border-[#92400e] bg-[#1c1200] text-[#fbbf24]"
+                    }`}
+                  >
+                    {isSolid ? "SOLID" : "BLUR"}
                   </span>
 
                   {HANDLE_DEFINITIONS.map((h) => (
@@ -432,9 +434,13 @@ export function EditorCanvas({
                       type="button"
                       aria-label={h.label}
                       onPointerDown={(e) => handleResizePointerDown(e, region, h.handle)}
-                      className={`absolute z-10 flex h-6 w-6 items-center justify-center ${h.positionClass} ${h.cursorClass} focus-visible:outline-2 focus-visible:outline-emerald-400`}
+                      className={`absolute z-10 flex h-6 w-6 items-center justify-center ${h.positionClass} ${h.cursorClass} focus-visible:outline-2 focus-visible:outline-[#22c55e]`}
                     >
-                      <span className="h-2.5 w-2.5 rounded-xs border border-zinc-950 bg-emerald-400 shadow" />
+                      <span
+                        className={`h-2.5 w-2.5 rounded-xs border border-[#0a0a0a] shadow ${
+                          isSolid ? "bg-[#22c55e]" : "bg-[#f59e0b]"
+                        }`}
+                      />
                     </button>
                   ))}
                 </>
@@ -446,4 +452,3 @@ export function EditorCanvas({
     </div>
   );
 }
-

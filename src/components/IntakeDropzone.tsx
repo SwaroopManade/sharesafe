@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { AlertTriangle, Clipboard, Loader2, ShieldCheck, Upload } from "lucide-react";
 import { IMAGE_LIMITS } from "@/config/limits";
 
 interface IntakeDropzoneProps {
@@ -30,6 +31,7 @@ export function IntakeDropzone({
   return (
     <div className="space-y-4">
       <div
+        data-drag-over={isDragOver}
         onDragOver={(e) => {
           e.preventDefault();
           if (!isLoading) setIsDragOver(true);
@@ -40,11 +42,7 @@ export function IntakeDropzone({
           setIsDragOver(false);
           handleFiles(e.dataTransfer.files);
         }}
-        className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-colors ${
-          isDragOver
-            ? "border-emerald-400 bg-emerald-500/10"
-            : "border-zinc-700 bg-zinc-900/70 hover:border-zinc-500"
-        }`}
+        className="relative flex min-h-[54vh] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#2e2e2e] bg-[#111111] px-6 py-14 text-center shadow-[0_1px_2px_rgba(0,0,0,0.5)] transition-all duration-200 hover:border-[#3d3d3d] data-[drag-over=true]:border-[#166534] data-[drag-over=true]:bg-[#052e16]"
       >
         <input
           ref={inputRef}
@@ -58,37 +56,30 @@ export function IntakeDropzone({
           }}
         />
 
-        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30">
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            className="h-6 w-6"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"
-            />
-          </svg>
+        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-[#2e2e2e] bg-[#1a1a1a] shadow-[0_4px_12px_rgba(0,0,0,0.6)]">
+          {isLoading ? (
+            <Loader2 size={28} strokeWidth={1.5} className="animate-spin text-[#4ade80]" aria-hidden="true" />
+          ) : (
+            <Upload size={28} strokeWidth={1.5} className="text-[#4ade80]" aria-hidden="true" />
+          )}
         </div>
 
-        <h2 className="text-lg font-semibold text-white">
-          {isLoading ? "Decoding image locally..." : "Select, drop, or paste an image"}
+        <h2 className="text-xl font-semibold tracking-tight text-[#f5f5f5]">
+          {isLoading ? "Decoding image locally..." : "Drop your image here"}
         </h2>
-        <p className="mt-1.5 max-w-md text-sm text-zinc-300">
-          Your file stays on your device. Nothing is uploaded to a server during editing or export.
+        <p className="mt-2 max-w-sm text-sm leading-relaxed text-[#a3a3a3]">
+          Or choose a file from your device. Everything runs in browser memory — nothing ever
+          leaves this tab.
         </p>
 
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <button
             type="button"
             disabled={isLoading}
             onClick={() => inputRef.current?.click()}
-            className="rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-zinc-950 shadow-sm transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#22c55e] px-5 py-2.5 text-sm font-semibold text-[#0a0a0a] transition-all duration-150 hover:bg-[#16a34a] hover:shadow-[0_0_20px_rgba(34,197,94,0.2)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e]"
           >
+            <Upload size={16} strokeWidth={1.75} aria-hidden="true" />
             {isLoading ? "Processing..." : "Choose Image"}
           </button>
 
@@ -97,33 +88,47 @@ export function IntakeDropzone({
               type="button"
               disabled={isLoading}
               onClick={onPasteRequest}
-              className="rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#2e2e2e] bg-[#1a1a1a] px-4 py-2.5 text-sm font-medium text-[#a3a3a3] transition-all duration-150 hover:border-[#3d3d3d] hover:bg-[#242424] hover:text-[#f5f5f5] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e]"
             >
+              <Clipboard size={15} strokeWidth={1.75} aria-hidden="true" />
               Paste from Clipboard
             </button>
           )}
         </div>
 
-        <p className="mt-5 text-xs text-zinc-400">
-          Supported: <span className="text-zinc-200">JPEG, PNG, static WebP</span> · Max{" "}
-          <span className="text-zinc-200">{maxMb} MB</span> · Max{" "}
-          <span className="text-zinc-200">{maxMp} MP</span> · Or press{" "}
-          <kbd className="rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 text-[11px] text-zinc-200">
-            Ctrl/⌘ + V
-          </kbd>
-        </p>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-xs text-[#666666]">
+          <span className="inline-flex items-center gap-1 text-[#4ade80]">
+            <ShieldCheck size={13} strokeWidth={1.75} aria-hidden="true" />
+            Zero server upload
+          </span>
+          <span aria-hidden="true">·</span>
+          <span>JPEG · PNG · WebP (static)</span>
+          <span aria-hidden="true">·</span>
+          <span>
+            Max {maxMb} MB / {maxMp} MP
+          </span>
+          <span aria-hidden="true">·</span>
+          <span>
+            Press{" "}
+            <kbd className="rounded border border-[#2e2e2e] bg-[#1a1a1a] px-1.5 py-0.5 text-[11px] text-[#a3a3a3]">
+              Ctrl/⌘ + V
+            </kbd>
+          </span>
+        </div>
       </div>
 
       {errorMessage && (
         <div
           role="alert"
-          className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200"
+          className="animate-banner-in flex items-start gap-2.5 rounded-lg border border-[#7f1d1d] bg-[#1f0a0a] px-4 py-3 text-xs text-[#f87171]"
         >
-          <strong className="font-semibold text-rose-100">Could not load image: </strong>
-          {errorMessage}
+          <AlertTriangle size={15} strokeWidth={1.75} className="mt-0.5 shrink-0" aria-hidden="true" />
+          <div>
+            <strong className="font-semibold text-[#fca5a5]">Could not load image: </strong>
+            {errorMessage}
+          </div>
         </div>
       )}
     </div>
   );
 }
-
