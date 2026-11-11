@@ -14,6 +14,7 @@ import {
   ZoomOut,
 } from "lucide-react";
 import type { ZoomSetting } from "@/components/EditorCanvas";
+import { computeNextZoomLevel, ZOOM_LEVELS } from "@/lib/editor-utils";
 import type { BlurStrength, RedactionMode, RedactionRegion } from "@/lib/image-engine";
 
 const SOLID_COLOR_SWATCHES = [
@@ -33,6 +34,7 @@ interface EditorToolbarProps {
   canUndo: boolean;
   canRedo: boolean;
   zoom: ZoomSetting;
+  fitScale?: number;
   onChangeMode: (mode: RedactionMode) => void;
   onChangeColor: (hex: string) => void;
   onChangeBlurStrength: (strength: BlurStrength) => void;
@@ -55,6 +57,7 @@ export function EditorToolbar({
   canUndo,
   canRedo,
   zoom,
+  fitScale = 1,
   onChangeMode,
   onChangeColor,
   onChangeBlurStrength,
@@ -70,17 +73,12 @@ export function EditorToolbar({
   const effectiveColor = selectedRegion?.color ?? activeColor;
   const effectiveBlur = selectedRegion?.blurStrength ?? activeBlurStrength;
 
+  const effectiveZoomValue = zoom === "fit" ? fitScale : zoom;
+  const isMinZoom = effectiveZoomValue <= ZOOM_LEVELS[0] + 0.005;
+  const isMaxZoom = effectiveZoomValue >= ZOOM_LEVELS[ZOOM_LEVELS.length - 1] - 0.005;
+
   const stepZoom = (direction: 1 | -1) => {
-    const levels = [0.5, 0.75, 1, 1.5, 2, 3];
-    const current = zoom === "fit" ? 1 : zoom;
-    if (direction === 1) {
-      const next = levels.find((l) => l > current + 0.01) ?? 3;
-      onChangeZoom(next);
-    } else {
-      const reversed = [...levels].reverse();
-      const next = reversed.find((l) => l < current - 0.01) ?? 0.5;
-      onChangeZoom(next);
-    }
+    onChangeZoom(computeNextZoomLevel(zoom, fitScale, direction));
   };
 
   return (
@@ -201,27 +199,30 @@ export function EditorToolbar({
             <button
               type="button"
               onClick={() => stepZoom(-1)}
+              disabled={isMinZoom}
               aria-label="Zoom out"
-              className="inline-flex items-center justify-center rounded-lg px-2 py-1.5 text-xs font-medium text-[#666666] transition-all duration-150 hover:bg-[#1a1a1a] hover:text-[#a3a3a3] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e]"
+              className="inline-flex items-center justify-center rounded-lg px-2 py-1.5 text-xs font-medium text-[#666666] transition-all duration-150 hover:bg-[#1a1a1a] hover:text-[#a3a3a3] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e]"
             >
               <ZoomOut size={14} strokeWidth={1.75} aria-hidden="true" />
             </button>
             <button
               type="button"
               onClick={() => onChangeZoom("fit")}
+              title="Reset zoom to fit viewport"
               className={`rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e] ${
                 zoom === "fit"
                   ? "border border-[#2e2e2e] bg-[#1a1a1a] text-[#f5f5f5]"
                   : "text-[#a3a3a3] hover:bg-[#1a1a1a] hover:text-[#f5f5f5]"
               }`}
             >
-              {zoom === "fit" ? "Fit" : `${Math.round(zoom * 100)}%`}
+              {zoom === "fit" ? `Fit (${Math.round(fitScale * 100)}%)` : `${Math.round(zoom * 100)}%`}
             </button>
             <button
               type="button"
               onClick={() => stepZoom(1)}
+              disabled={isMaxZoom}
               aria-label="Zoom in"
-              className="inline-flex items-center justify-center rounded-lg px-2 py-1.5 text-xs font-medium text-[#666666] transition-all duration-150 hover:bg-[#1a1a1a] hover:text-[#a3a3a3] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e]"
+              className="inline-flex items-center justify-center rounded-lg px-2 py-1.5 text-xs font-medium text-[#666666] transition-all duration-150 hover:bg-[#1a1a1a] hover:text-[#a3a3a3] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e]"
             >
               <ZoomIn size={14} strokeWidth={1.75} aria-hidden="true" />
             </button>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
+import { HeaderSessionBadge } from "@/components/HeaderSessionBadge";
 import { APP_CONFIG } from "@/config/app";
 
 interface SiteHeaderProps {
@@ -32,13 +33,14 @@ export function SiteHeader({ activePath = "/" }: SiteHeaderProps) {
         <nav aria-label="Main navigation" className="flex items-center gap-1">
           <Link
             href="/"
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e] ${
+            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e] ${
               activePath === "/"
                 ? "bg-[#1a1a1a] text-[#f5f5f5] border border-[#2e2e2e]"
                 : "text-[#666666] hover:bg-[#111111] hover:text-[#a3a3a3]"
             }`}
           >
-            Editor
+            <span>Editor</span>
+            <HeaderSessionBadge />
           </Link>
           <Link
             href="/privacy"

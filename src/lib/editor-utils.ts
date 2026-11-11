@@ -170,3 +170,29 @@ export function moveNormalizedRegion(
   return { ...origin, x, y };
 }
 
+export const ZOOM_LEVELS = [0.1, 0.15, 0.25, 0.35, 0.5, 0.75, 1, 1.25, 1.5, 2, 3] as const;
+
+/**
+ * Compute the next zoom scale relative to the actual viewport fitScale when zoom is "fit".
+ */
+export function computeNextZoomLevel(
+  currentZoom: "fit" | number,
+  fitScale: number,
+  direction: 1 | -1,
+): number {
+  const safeFit = Number.isFinite(fitScale) && fitScale > 0 ? fitScale : 1;
+  const effective = currentZoom === "fit" ? safeFit : currentZoom;
+  const epsilon = 0.015;
+
+  if (direction === 1) {
+    return ZOOM_LEVELS.find((level) => level > effective + epsilon) ?? ZOOM_LEVELS[ZOOM_LEVELS.length - 1];
+  }
+
+  for (let i = ZOOM_LEVELS.length - 1; i >= 0; i -= 1) {
+    if (ZOOM_LEVELS[i] < effective - epsilon) {
+      return ZOOM_LEVELS[i];
+    }
+  }
+  return ZOOM_LEVELS[0];
+}
+

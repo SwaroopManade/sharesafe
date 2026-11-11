@@ -1,44 +1,16 @@
 "use client";
 
-import { type ReactNode, useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { AlertTriangle, X } from "lucide-react";
 import { ConfirmDiscardDialog } from "@/components/ConfirmDiscardDialog";
-import { EditorCanvas, type ZoomSetting } from "@/components/EditorCanvas";
+import { EditorCanvas } from "@/components/EditorCanvas";
 import { EditorToolbar } from "@/components/EditorToolbar";
 import { ExportPanel } from "@/components/ExportPanel";
 import { ExportPreviewModal } from "@/components/ExportPreviewModal";
 import { IntakeDropzone } from "@/components/IntakeDropzone";
-import { APP_CONFIG } from "@/config/app";
 import { IMAGE_LIMITS } from "@/config/limits";
-import {
-  buildCenteredRegion,
-  createInitialHistory,
-  formatByteSize,
-  historyReducer,
-  moveNormalizedRegion,
-} from "@/lib/editor-utils";
-import {
-  decodeSourceImage,
-  detectBrowserCapabilities,
-  exportImageOffMainThreadOrFallback,
-  ImageEngineError,
-  validateImageFile,
-  type BlurStrength,
-  type BrowserCapabilities,
-  type DecodedImage,
-  type ExportResult,
-  type RedactionMode,
-  type RedactionRegion,
-  type SupportedImageMime,
-} from "@/lib/image-engine";
-
-interface ActiveImageSession {
-  file: File;
-  mimeType: SupportedImageMime;
-  byteSize: number;
-  filename: string;
-  decoded: DecodedImage;
-}
+import { formatByteSize } from "@/lib/editor-utils";
+import { useEditor } from "@/store/editor-store";
 
 type PendingDiscardAction =
   | { kind: "reset-regions" }
@@ -51,128 +23,66 @@ interface BlurBeforeAppProps {
 }
 
 export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) {
-  const [session, setSession] = useState<ActiveImageSession | null>(null);
-  const sessionRef = useRef<ActiveImageSession | null>(null);
+  const {
+    state,
+    canClipboardRead,
+    loadFile,
+    pasteFromClipboard,
+    clearSession,
+    commitRegions,
+    undo,
+    redo,
+    resetRegions,
+    selectRegion,
+    setMode,
+    setSolidColor,
+    setBlurStrength,
+    setZoom,
+    addCenteredBox,
+    deleteSelectedRegion,
+    nudgeSelectedRegion,
+    setOutputMime,
+    setQuality,
+    setResizeWidth,
+    setResizeHeight,
+    toggleAspectLock,
+    resetDimensions,
+    runExport,
+    clearExportResult,
+    clearIntakeError,
+    setTransientNotice,
+  } = useEditor();
 
-  const [history, dispatchHistory] = useReducer(historyReducer, undefined, createInitialHistory);
-  const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
-  const [activeMode, setActiveMode] = useState<RedactionMode>(APP_CONFIG.defaultRedactionMode);
-  const [activeColor, setActiveColor] = useState<string>(APP_CONFIG.defaultSolidColor);
-  const [activeBlurStrength, setActiveBlurStrength] = useState<BlurStrength>(
-    APP_CONFIG.defaultBlurStrength,
-  );
-  const [zoom, setZoom] = useState<ZoomSetting>("fit");
-
-  const [capabilities, setCapabilities] = useState<BrowserCapabilities>({
-    supportsOffscreenCanvas: false,
-    supportsWebWorkers: false,
-    supportedExportMimes: ["image/jpeg", "image/png"],
-  });
-
-  const [outputMime, setOutputMime] = useState<SupportedImageMime>("image/png");
-  const [quality, setQuality] = useState<number>(APP_CONFIG.defaultLossyQuality);
-  const [resizeWidth, setResizeWidth] = useState<string>("");
-  const [resizeHeight, setResizeHeight] = useState<string>("");
-  const [lockAspectRatio, setLockAspectRatio] = useState<boolean>(true);
-
-  const [isLoadingImage, setIsLoadingImage] = useState(false);
-  const [intakeError, setIntakeError] = useState<string | null>(null);
-  const [transientNotice, setTransientNotice] = useState<string | null>(null);
-  const [isExporting, setIsExporting] = useState(false);
-  const [exportError, setExportError] = useState<string | null>(null);
-  const [exportResult, setExportResult] = useState<ExportResult | null>(null);
   const [pendingDiscard, setPendingDiscard] = useState<PendingDiscardAction | null>(null);
-  const [canClipboardRead, setCanClipboardRead] = useState(false);
+  const [fitScale, setFitScale] = useState<number>(1);
+
+  const {
+    session,
+    history,
+    selectedRegionId,
+    activeMode,
+    activeColor,
+    activeBlurStrength,
+    zoom,
+    capabilities,
+    exportSettings,
+    isLoadingImage,
+    intakeError,
+    transientNotice,
+    isExporting,
+    exportError,
+    exportResult,
+  } = state;
 
   const regions = history.present;
   const selectedRegion = regions.find((r) => r.id === selectedRegionId) ?? null;
 
-  useEffect(() => {
-    sessionRef.current = session;
-  }, [session]);
-
+  // Close transient preview modal cleanly if user navigates away and returns via history
   useEffect(() => {
     return () => {
-      sessionRef.current?.decoded.release();
+      clearExportResult();
     };
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    detectBrowserCapabilities().then((caps) => {
-      if (active) setCapabilities(caps);
-    });
-    if (typeof navigator !== "undefined" && navigator.clipboard && "read" in navigator.clipboard) {
-      setCanClipboardRead(true);
-    }
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!session || regions.length === 0) return;
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = "";
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [session, regions.length]);
-
-  const loadFileDirect = useCallback(
-    async (file: File) => {
-      setIsLoadingImage(true);
-      setIntakeError(null);
-      setExportError(null);
-      setTransientNotice(null);
-
-      try {
-        const validated = await validateImageFile(file);
-        const decoded = await decodeSourceImage(file);
-
-        sessionRef.current?.decoded.release();
-
-        const nextSession: ActiveImageSession = {
-          file,
-          mimeType: validated.mimeType,
-          byteSize: validated.byteSize,
-          filename: validated.originalName,
-          decoded,
-        };
-
-        const defaultExportMime = capabilities.supportedExportMimes.includes(validated.mimeType)
-          ? validated.mimeType
-          : "image/png";
-
-        setSession(nextSession);
-        dispatchHistory({ type: "CLEAR_HISTORY" });
-        setSelectedRegionId(null);
-        setZoom("fit");
-        setOutputMime(defaultExportMime);
-        setQuality(APP_CONFIG.defaultLossyQuality);
-        setResizeWidth(String(decoded.width));
-        setResizeHeight(String(decoded.height));
-        setLockAspectRatio(true);
-        setExportResult(null);
-
-        if (validated.mimeType !== defaultExportMime) {
-          setTransientNotice(
-            `This browser does not support ${APP_CONFIG.mimeToLabel[validated.mimeType]} export; defaulted output format to PNG.`,
-          );
-        }
-      } catch (err) {
-        const message =
-          err instanceof ImageEngineError
-            ? err.message
-            : "Failed to load this image. Please try another JPEG, PNG, or WebP file.";
-        setIntakeError(message);
-      } finally {
-        setIsLoadingImage(false);
-      }
-    },
-    [capabilities.supportedExportMimes],
-  );
+  }, [clearExportResult]);
 
   const requestFileLoad = useCallback(
     (file: File) => {
@@ -180,11 +90,12 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
         setPendingDiscard({ kind: "load-file", file });
         return;
       }
-      void loadFileDirect(file);
+      void loadFile(file);
     },
-    [session, regions.length, loadFileDirect],
+    [session, regions.length, loadFile],
   );
 
+  // Global clipboard paste support (FR-012) while Editor is mounted
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
       const items = e.clipboardData?.items;
@@ -204,27 +115,7 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
     return () => window.removeEventListener("paste", handlePaste);
   }, [requestFileLoad]);
 
-  const handlePasteButton = async () => {
-    try {
-      const clipboardItems = await navigator.clipboard.read();
-      for (const item of clipboardItems) {
-        const imageType = item.types.find((t) => t.startsWith("image/"));
-        if (imageType) {
-          const blob = await item.getType(imageType);
-          const ext = imageType.split("/")[1] || "png";
-          const pastedFile = new File([blob], `clipboard-image.${ext}`, { type: imageType });
-          requestFileLoad(pastedFile);
-          return;
-        }
-      }
-      setIntakeError("No image found on your clipboard. Copy an image first or select a file.");
-    } catch {
-      setIntakeError(
-        "Clipboard access was blocked by the browser. Try pressing Ctrl/Cmd+V directly or choosing a file.",
-      );
-    }
-  };
-
+  // Keyboard shortcuts for Undo/Redo, Delete, and arrow-key region nudging (NFR-016)
   useEffect(() => {
     if (!session) return;
 
@@ -242,25 +133,23 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
       const mod = e.ctrlKey || e.metaKey;
       if (mod && e.key.toLowerCase() === "z" && !e.shiftKey) {
         e.preventDefault();
-        dispatchHistory({ type: "UNDO" });
+        undo();
         return;
       }
       if ((mod && e.key.toLowerCase() === "z" && e.shiftKey) || (mod && e.key.toLowerCase() === "y")) {
         e.preventDefault();
-        dispatchHistory({ type: "REDO" });
+        redo();
         return;
       }
 
       if ((e.key === "Delete" || e.key === "Backspace") && selectedRegionId) {
         e.preventDefault();
-        const next = regions.filter((r) => r.id !== selectedRegionId);
-        dispatchHistory({ type: "COMMIT", next });
-        setSelectedRegionId(null);
+        deleteSelectedRegion();
         return;
       }
 
       if (
-        selectedRegion &&
+        selectedRegionId &&
         (e.key === "ArrowLeft" ||
           e.key === "ArrowRight" ||
           e.key === "ArrowUp" ||
@@ -268,171 +157,15 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
       ) {
         e.preventDefault();
         const stepPx = e.shiftKey ? 20 : 4;
-        const dxNorm =
-          e.key === "ArrowLeft"
-            ? -stepPx / session.decoded.width
-            : e.key === "ArrowRight"
-              ? stepPx / session.decoded.width
-              : 0;
-        const dyNorm =
-          e.key === "ArrowUp"
-            ? -stepPx / session.decoded.height
-            : e.key === "ArrowDown"
-              ? stepPx / session.decoded.height
-              : 0;
-
-        const moved = moveNormalizedRegion(selectedRegion, dxNorm, dyNorm);
-        const next = regions.map((r) => (r.id === selectedRegion.id ? moved : r));
-        dispatchHistory({ type: "COMMIT", next });
+        const dxPx = e.key === "ArrowLeft" ? -stepPx : e.key === "ArrowRight" ? stepPx : 0;
+        const dyPx = e.key === "ArrowUp" ? -stepPx : e.key === "ArrowDown" ? stepPx : 0;
+        nudgeSelectedRegion(dxPx, dyPx);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [session, regions, selectedRegion, selectedRegionId]);
-
-  const handleCommitRegions = (next: RedactionRegion[], selectId?: string | null) => {
-    dispatchHistory({ type: "COMMIT", next });
-    if (selectId !== undefined) {
-      setSelectedRegionId(selectId);
-    }
-  };
-
-  const handleChangeMode = (mode: RedactionMode) => {
-    setActiveMode(mode);
-    if (selectedRegion && selectedRegion.mode !== mode) {
-      const next = regions.map((r) => (r.id === selectedRegion.id ? { ...r, mode } : r));
-      dispatchHistory({ type: "COMMIT", next });
-    }
-  };
-
-  const handleChangeColor = (hex: string) => {
-    setActiveColor(hex);
-    if (selectedRegion && selectedRegion.mode === "solid" && selectedRegion.color !== hex) {
-      const next = regions.map((r) => (r.id === selectedRegion.id ? { ...r, color: hex } : r));
-      dispatchHistory({ type: "COMMIT", next });
-    }
-  };
-
-  const handleChangeBlurStrength = (strength: BlurStrength) => {
-    setActiveBlurStrength(strength);
-    if (
-      selectedRegion &&
-      selectedRegion.mode === "blur" &&
-      selectedRegion.blurStrength !== strength
-    ) {
-      const next = regions.map((r) =>
-        r.id === selectedRegion.id ? { ...r, blurStrength: strength } : r,
-      );
-      dispatchHistory({ type: "COMMIT", next });
-    }
-  };
-
-  const handleAddCenteredBox = () => {
-    if (!session || regions.length >= IMAGE_LIMITS.maxRedactionRegions) return;
-    const region = buildCenteredRegion(
-      session.decoded.width,
-      session.decoded.height,
-      activeMode,
-      activeColor,
-      activeBlurStrength,
-    );
-    handleCommitRegions([...regions, region], region.id);
-  };
-
-  const handleDeleteSelected = () => {
-    if (!selectedRegionId) return;
-    handleCommitRegions(
-      regions.filter((r) => r.id !== selectedRegionId),
-      null,
-    );
-  };
-
-  const handleChangeResizeWidth = (val: string) => {
-    setResizeWidth(val);
-    if (!session || !lockAspectRatio) return;
-    const parsed = Number(val);
-    if (Number.isFinite(parsed) && parsed > 0) {
-      const aspect = session.decoded.width / session.decoded.height;
-      setResizeHeight(String(Math.max(1, Math.round(parsed / aspect))));
-    }
-  };
-
-  const handleChangeResizeHeight = (val: string) => {
-    setResizeHeight(val);
-    if (!session || !lockAspectRatio) return;
-    const parsed = Number(val);
-    if (Number.isFinite(parsed) && parsed > 0) {
-      const aspect = session.decoded.width / session.decoded.height;
-      setResizeWidth(String(Math.max(1, Math.round(parsed * aspect))));
-    }
-  };
-
-  const handleToggleAspectLock = () => {
-    const nextLock = !lockAspectRatio;
-    setLockAspectRatio(nextLock);
-    if (nextLock && session) {
-      const parsedW = Number(resizeWidth);
-      if (Number.isFinite(parsedW) && parsedW > 0) {
-        const aspect = session.decoded.width / session.decoded.height;
-        setResizeHeight(String(Math.max(1, Math.round(parsedW / aspect))));
-      }
-    }
-  };
-
-  const handleResetDimensions = () => {
-    if (!session) return;
-    setResizeWidth(String(session.decoded.width));
-    setResizeHeight(String(session.decoded.height));
-  };
-
-  const handleExport = async () => {
-    if (!session || isExporting) return;
-    setIsExporting(true);
-    setExportError(null);
-
-    try {
-      const widthNum = Number(resizeWidth);
-      const heightNum = Number(resizeHeight);
-
-      if (
-        !Number.isFinite(widthNum) ||
-        !Number.isFinite(heightNum) ||
-        widthNum < 1 ||
-        heightNum < 1
-      ) {
-        throw new ImageEngineError(
-          "INVALID_DIMENSIONS",
-          "Please enter valid positive integer values for output width and height.",
-        );
-      }
-
-      const result = await exportImageOffMainThreadOrFallback({
-        file: session.file,
-        originalFilename: session.filename,
-        regions,
-        exportOptions: {
-          outputMime,
-          quality,
-          resize: {
-            width: Math.round(widthNum),
-            height: Math.round(heightNum),
-            lockAspectRatio,
-          },
-        },
-      });
-
-      setExportResult(result);
-    } catch (err) {
-      const message =
-        err instanceof ImageEngineError
-          ? err.message
-          : "Export failed, possibly due to memory constraints. Try smaller output dimensions.";
-      setExportError(message);
-    } finally {
-      setIsExporting(false);
-    }
-  };
+  }, [session, selectedRegionId, undo, redo, deleteSelectedRegion, nudgeSelectedRegion]);
 
   const confirmPendingDiscard = () => {
     const action = pendingDiscard;
@@ -440,18 +173,11 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
     if (!action) return;
 
     if (action.kind === "reset-regions") {
-      dispatchHistory({ type: "RESET_ALL" });
-      setSelectedRegionId(null);
+      resetRegions();
     } else if (action.kind === "clear-image") {
-      session?.decoded.release();
-      setSession(null);
-      dispatchHistory({ type: "CLEAR_HISTORY" });
-      setSelectedRegionId(null);
-      setExportResult(null);
-      setExportError(null);
-      setTransientNotice(null);
+      clearSession();
     } else if (action.kind === "load-file") {
-      void loadFileDirect(action.file);
+      void loadFile(action.file);
     }
   };
 
@@ -464,7 +190,7 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
             isLoading={isLoadingImage}
             errorMessage={intakeError}
             onSelectFile={requestFileLoad}
-            onPasteRequest={canClipboardRead ? handlePasteButton : undefined}
+            onPasteRequest={canClipboardRead ? () => void pasteFromClipboard() : undefined}
           />
         </div>
         {intakeFooter}
@@ -484,23 +210,21 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
         canUndo={history.past.length > 0}
         canRedo={history.future.length > 0}
         zoom={zoom}
-        onChangeMode={handleChangeMode}
-        onChangeColor={handleChangeColor}
-        onChangeBlurStrength={handleChangeBlurStrength}
-        onAddCenteredBox={handleAddCenteredBox}
-        onDeleteSelected={handleDeleteSelected}
-        onUndo={() => dispatchHistory({ type: "UNDO" })}
-        onRedo={() => dispatchHistory({ type: "REDO" })}
+        fitScale={fitScale}
+        onChangeMode={setMode}
+        onChangeColor={setSolidColor}
+        onChangeBlurStrength={setBlurStrength}
+        onAddCenteredBox={addCenteredBox}
+        onDeleteSelected={deleteSelectedRegion}
+        onUndo={undo}
+        onRedo={redo}
         onResetAll={() => setPendingDiscard({ kind: "reset-regions" })}
         onChangeZoom={setZoom}
         onReplaceImage={() => {
           if (regions.length > 0) {
             setPendingDiscard({ kind: "clear-image" });
           } else {
-            session.decoded.release();
-            setSession(null);
-            dispatchHistory({ type: "CLEAR_HISTORY" });
-            setSelectedRegionId(null);
+            clearSession();
           }
         }}
       />
@@ -528,10 +252,20 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
       {intakeError && (
         <div
           role="alert"
-          className="animate-banner-in flex items-center gap-2 rounded-lg border border-[#7f1d1d] bg-[#1f0a0a] px-4 py-2.5 text-xs text-[#f87171]"
+          className="animate-banner-in flex items-center justify-between gap-3 rounded-lg border border-[#7f1d1d] bg-[#1f0a0a] px-4 py-2.5 text-xs text-[#f87171]"
         >
-          <AlertTriangle size={14} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />
-          <span>{intakeError}</span>
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={14} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />
+            <span>{intakeError}</span>
+          </div>
+          <button
+            type="button"
+            aria-label="Dismiss error"
+            onClick={clearIntakeError}
+            className="rounded p-0.5 text-[#f87171] transition-colors hover:text-[#fca5a5] focus-visible:outline-2 focus-visible:outline-[#ef4444]"
+          >
+            <X size={14} strokeWidth={1.75} aria-hidden="true" />
+          </button>
         </div>
       )}
 
@@ -545,12 +279,13 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
             activeColor={activeColor}
             activeBlurStrength={activeBlurStrength}
             zoom={zoom}
-            onSelectRegion={setSelectedRegionId}
-            onCommitRegions={handleCommitRegions}
+            onSelectRegion={selectRegion}
+            onCommitRegions={commitRegions}
             onTransientNotice={setTransientNotice}
+            onFitScaleChange={setFitScale}
           />
 
-          {/* Status bar (uiux-component-patterns Section 6) */}
+          {/* Status bar */}
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#2e2e2e] bg-[#111111] px-4 py-2.5 text-xs text-[#666666]">
             <div className="flex min-w-0 items-center gap-2.5">
               <span className="max-w-[200px] truncate font-medium text-[#a3a3a3]" title={session.filename}>
@@ -576,7 +311,7 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
             </div>
           </div>
 
-          {/* Region chips (uiux-component-patterns Section 7) */}
+          {/* Region chips */}
           {regions.length > 0 && (
             <div className="rounded-xl border border-[#2e2e2e] bg-[#111111] p-3">
               <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-[#666666]">
@@ -599,7 +334,7 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
                     >
                       <button
                         type="button"
-                        onClick={() => setSelectedRegionId(r.id)}
+                        onClick={() => selectRegion(r.id)}
                         className="transition-colors focus-visible:outline-2 focus-visible:outline-[#22c55e]"
                       >
                         #{idx + 1} {isSolid ? "Solid" : "Blur"}
@@ -609,7 +344,7 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
                         aria-label={`Remove region ${idx + 1}`}
                         onClick={() => {
                           const next = regions.filter((item) => item.id !== r.id);
-                          handleCommitRegions(next, selected ? null : selectedRegionId);
+                          commitRegions(next, selected ? null : selectedRegionId);
                         }}
                         className="ml-0.5 rounded p-0.5 opacity-60 transition-opacity hover:opacity-100 focus-visible:outline-2 focus-visible:outline-[#22c55e]"
                       >
@@ -627,28 +362,28 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
           sourceWidth={session.decoded.width}
           sourceHeight={session.decoded.height}
           sourceMime={session.mimeType}
-          outputMime={outputMime}
+          outputMime={exportSettings.outputMime}
           supportedExportMimes={capabilities.supportedExportMimes}
-          quality={quality}
-          resizeWidth={resizeWidth}
-          resizeHeight={resizeHeight}
-          lockAspectRatio={lockAspectRatio}
+          quality={exportSettings.quality}
+          resizeWidth={exportSettings.resizeWidth}
+          resizeHeight={exportSettings.resizeHeight}
+          lockAspectRatio={exportSettings.lockAspectRatio}
           isExporting={isExporting}
           exportError={exportError}
           onChangeOutputMime={setOutputMime}
           onChangeQuality={setQuality}
-          onChangeResizeWidth={handleChangeResizeWidth}
-          onChangeResizeHeight={handleChangeResizeHeight}
-          onToggleAspectLock={handleToggleAspectLock}
-          onResetDimensions={handleResetDimensions}
-          onExport={handleExport}
+          onChangeResizeWidth={setResizeWidth}
+          onChangeResizeHeight={setResizeHeight}
+          onToggleAspectLock={toggleAspectLock}
+          onResetDimensions={resetDimensions}
+          onExport={() => void runExport()}
         />
       </div>
 
       <ExportPreviewModal
         result={exportResult}
         sourceByteSize={session.byteSize}
-        onClose={() => setExportResult(null)}
+        onClose={clearExportResult}
       />
 
       <ConfirmDiscardDialog

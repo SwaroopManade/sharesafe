@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { IMAGE_LIMITS } from "@/config/limits";
 import {
   createRegionId,
@@ -32,6 +32,7 @@ interface EditorCanvasProps {
   onSelectRegion: (id: string | null) => void;
   onCommitRegions: (next: RedactionRegion[], selectId?: string | null) => void;
   onTransientNotice: (msg: string | null) => void;
+  onFitScaleChange?: (fitScale: number) => void;
 }
 
 type InteractionState =
@@ -83,11 +84,14 @@ export function EditorCanvas({
   onSelectRegion,
   onCommitRegions,
   onTransientNotice,
+  onFitScaleChange,
 }: EditorCanvasProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const previewSourceRef = useRef<HTMLCanvasElement | null>(null);
+  const scrollCenterRef = useRef<{ rx: number; ry: number }>({ rx: 0.5, ry: 0.5 });
+  const prevZoomRef = useRef<ZoomSetting>(zoom);
 
   const [viewportSize, setViewportSize] = useState({ width: 800, height: 520 });
   const [interaction, setInteraction] = useState<InteractionState | null>(null);
@@ -98,8 +102,8 @@ export function EditorCanvas({
 
     const updateSize = () => {
       setViewportSize({
-        width: Math.max(240, el.clientWidth - 24),
-        height: Math.max(240, el.clientHeight - 24),
+        width: Math.max(240, el.clientWidth - 32),
+        height: Math.max(240, el.clientHeight - 32),
       });
     };
 
@@ -145,9 +149,49 @@ export function EditorCanvas({
     return Math.min(1, scaleX, scaleY);
   }, [viewportSize.width, viewportSize.height, decodedImage.width, decodedImage.height]);
 
+  useEffect(() => {
+    onFitScaleChange?.(fitScale);
+  }, [fitScale, onFitScaleChange]);
+
   const effectiveScale = zoom === "fit" ? fitScale : zoom;
   const displayWidth = Math.max(1, Math.round(decodedImage.width * effectiveScale));
   const displayHeight = Math.max(1, Math.round(decodedImage.height * effectiveScale));
+
+  const handleViewportScroll = useCallback(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const hasOverflowX = el.scrollWidth > el.clientWidth + 1;
+    const hasOverflowY = el.scrollHeight > el.clientHeight + 1;
+    scrollCenterRef.current = {
+      rx: hasOverflowX ? (el.scrollLeft + el.clientWidth / 2) / el.scrollWidth : 0.5,
+      ry: hasOverflowY ? (el.scrollTop + el.clientHeight / 2) / el.scrollHeight : 0.5,
+    };
+  }, []);
+
+  // Preserve viewport center proportionally when zoom level changes (never trapping negative top/left scroll)
+  useLayoutEffect(() => {
+    const el = viewportRef.current;
+    if (!el || prevZoomRef.current === zoom) return;
+    prevZoomRef.current = zoom;
+
+    if (zoom === "fit") {
+      el.scrollLeft = 0;
+      el.scrollTop = 0;
+      scrollCenterRef.current = { rx: 0.5, ry: 0.5 };
+      return;
+    }
+
+    const maxScrollLeft = Math.max(0, el.scrollWidth - el.clientWidth);
+    const maxScrollTop = Math.max(0, el.scrollHeight - el.clientHeight);
+    el.scrollLeft = Math.min(
+      maxScrollLeft,
+      Math.max(0, scrollCenterRef.current.rx * el.scrollWidth - el.clientWidth / 2),
+    );
+    el.scrollTop = Math.min(
+      maxScrollTop,
+      Math.max(0, scrollCenterRef.current.ry * el.scrollHeight - el.clientHeight / 2),
+    );
+  }, [zoom, displayWidth, displayHeight]);
 
   const effectiveRegions = useMemo(() => {
     if (!interaction) return regions;
@@ -367,87 +411,93 @@ export function EditorCanvas({
   return (
     <div
       ref={viewportRef}
-      className="relative flex h-[56vh] min-h-[340px] max-h-[74vh] w-full items-center justify-center overflow-auto rounded-xl border border-[#2e2e2e] bg-[#0a0a0a] bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] [background-size:20px_20px] p-3 shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
+      onScroll={handleViewportScroll}
+      className="relative h-[56vh] min-h-[340px] max-h-[74vh] w-full overflow-auto rounded-xl border border-[#2e2e2e] bg-[#0a0a0a] bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] [background-size:20px_20px] shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
     >
-      <div
-        ref={stageRef}
-        tabIndex={0}
-        role="application"
-        aria-label="Image redaction canvas. Drag across the image to draw a redaction rectangle, or use Add Box and arrow keys."
-        onPointerDown={handleStagePointerDown}
-        onPointerMove={handleStagePointerMove}
-        onPointerUp={finishInteraction}
-        onPointerCancel={finishInteraction}
-        style={{ width: `${displayWidth}px`, height: `${displayHeight}px` }}
-        className="relative shrink-0 cursor-crosshair touch-none select-none overflow-hidden rounded-sm shadow-[0_4px_12px_rgba(0,0,0,0.6),0_1px_3px_rgba(0,0,0,0.4)] ring-1 ring-[#2e2e2e] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#22c55e]"
-      >
-        <canvas
-          ref={canvasRef}
+      <div className="flex min-h-full min-w-full p-4">
+        <div
+          ref={stageRef}
+          tabIndex={0}
+          role="application"
+          aria-label="Image redaction canvas. Drag across the image to draw a redaction rectangle, or use Add Box and arrow keys."
+          onPointerDown={handleStagePointerDown}
+          onPointerMove={handleStagePointerMove}
+          onPointerUp={finishInteraction}
+          onPointerCancel={finishInteraction}
           style={{ width: `${displayWidth}px`, height: `${displayHeight}px` }}
-          className="block h-full w-full"
-        />
+          className="relative m-auto shrink-0 cursor-crosshair touch-none select-none rounded-sm shadow-[0_4px_12px_rgba(0,0,0,0.6),0_1px_3px_rgba(0,0,0,0.4)] ring-1 ring-[#2e2e2e] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#22c55e]"
+        >
+          <canvas
+            ref={canvasRef}
+            style={{ width: `${displayWidth}px`, height: `${displayHeight}px` }}
+            className="block h-full w-full overflow-hidden rounded-sm"
+          />
 
-        {overlayRegions.map((region) => {
-          const isSelected = region.id === selectedRegionId;
-          const isSolid = region.mode === "solid";
-          const isBlurDraft =
-            interaction !== null &&
-            ((interaction.kind === "draw" && interaction.draft.id === region.id) ||
-              (interaction.kind !== "draw" && interaction.regionId === region.id)) &&
-            !isSolid;
+          {overlayRegions.map((region) => {
+            const isSelected = region.id === selectedRegionId;
+            const isSolid = region.mode === "solid";
+            const badgeInsideTop = region.y * displayHeight < 28;
+            const isBlurDraft =
+              interaction !== null &&
+              ((interaction.kind === "draw" && interaction.draft.id === region.id) ||
+                (interaction.kind !== "draw" && interaction.regionId === region.id)) &&
+              !isSolid;
 
-          return (
-            <div
-              key={region.id}
-              onPointerDown={(e) => handleRegionPointerDown(e, region)}
-              style={{
-                left: `${region.x * 100}%`,
-                top: `${region.y * 100}%`,
-                width: `${region.width * 100}%`,
-                height: `${region.height * 100}%`,
-              }}
-              className={`absolute box-border cursor-move transition-[box-shadow,ring-color] duration-150 ${
-                isBlurDraft ? "bg-white/10 backdrop-blur-md" : ""
-              } ${
-                isSelected
-                  ? isSolid
-                    ? "ring-2 ring-[#22c55e] ring-offset-1 ring-offset-[#0a0a0a]"
-                    : "ring-2 ring-[#f59e0b] ring-offset-1 ring-offset-[#0a0a0a]"
-                  : "ring-1 ring-white/25 hover:ring-[#a3a3a3]"
-              }`}
-            >
-              {isSelected && (
-                <>
-                  <span
-                    className={`pointer-events-none absolute -top-6 left-0 inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-bold tracking-wider ${
-                      isSolid
-                        ? "border-[#166534] bg-[#052e16] text-[#4ade80]"
-                        : "border-[#92400e] bg-[#1c1200] text-[#fbbf24]"
-                    }`}
-                  >
-                    {isSolid ? "SOLID" : "BLUR"}
-                  </span>
-
-                  {HANDLE_DEFINITIONS.map((h) => (
-                    <button
-                      key={h.handle}
-                      type="button"
-                      aria-label={h.label}
-                      onPointerDown={(e) => handleResizePointerDown(e, region, h.handle)}
-                      className={`absolute z-10 flex h-6 w-6 items-center justify-center ${h.positionClass} ${h.cursorClass} focus-visible:outline-2 focus-visible:outline-[#22c55e]`}
+            return (
+              <div
+                key={region.id}
+                onPointerDown={(e) => handleRegionPointerDown(e, region)}
+                style={{
+                  left: `${region.x * 100}%`,
+                  top: `${region.y * 100}%`,
+                  width: `${region.width * 100}%`,
+                  height: `${region.height * 100}%`,
+                }}
+                className={`absolute box-border cursor-move transition-[box-shadow,ring-color] duration-150 ${
+                  isBlurDraft ? "bg-white/10 backdrop-blur-md" : ""
+                } ${
+                  isSelected
+                    ? isSolid
+                      ? "ring-2 ring-[#22c55e] ring-offset-1 ring-offset-[#0a0a0a]"
+                      : "ring-2 ring-[#f59e0b] ring-offset-1 ring-offset-[#0a0a0a]"
+                    : "ring-1 ring-white/25 hover:ring-[#a3a3a3]"
+                }`}
+              >
+                {isSelected && (
+                  <>
+                    <span
+                      className={`pointer-events-none absolute z-10 inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-bold tracking-wider ${
+                        badgeInsideTop ? "left-1.5 top-1.5" : "-top-6 left-0"
+                      } ${
+                        isSolid
+                          ? "border-[#166534] bg-[#052e16] text-[#4ade80]"
+                          : "border-[#92400e] bg-[#1c1200] text-[#fbbf24]"
+                      }`}
                     >
-                      <span
-                        className={`h-2.5 w-2.5 rounded-xs border border-[#0a0a0a] shadow ${
-                          isSolid ? "bg-[#22c55e]" : "bg-[#f59e0b]"
-                        }`}
-                      />
-                    </button>
-                  ))}
-                </>
-              )}
-            </div>
-          );
-        })}
+                      {isSolid ? "SOLID" : "BLUR"}
+                    </span>
+
+                    {HANDLE_DEFINITIONS.map((h) => (
+                      <button
+                        key={h.handle}
+                        type="button"
+                        aria-label={h.label}
+                        onPointerDown={(e) => handleResizePointerDown(e, region, h.handle)}
+                        className={`absolute z-10 flex h-6 w-6 items-center justify-center ${h.positionClass} ${h.cursorClass} focus-visible:outline-2 focus-visible:outline-[#22c55e]`}
+                      >
+                        <span
+                          className={`h-2.5 w-2.5 rounded-xs border border-[#0a0a0a] shadow ${
+                            isSolid ? "bg-[#22c55e]" : "bg-[#f59e0b]"
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

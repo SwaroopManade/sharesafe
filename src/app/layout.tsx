@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { APP_CONFIG } from "@/config/app";
+import { EditorProvider } from "@/store/editor-store";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
@@ -31,7 +32,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         >
           Skip to main content
         </a>
-        {children}
+        <EditorProvider>{children}</EditorProvider>
       </body>
     </html>
   );

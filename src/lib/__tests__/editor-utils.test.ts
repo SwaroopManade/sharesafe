@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildCenteredRegion,
+  computeNextZoomLevel,
   createInitialHistory,
   formatByteSize,
   historyReducer,
@@ -70,6 +71,21 @@ describe("region movement & resize helpers", () => {
     expect(formatByteSize(512)).toBe("512 B");
     expect(formatByteSize(1536)).toBe("1.5 KB");
     expect(formatByteSize(2 * 1024 * 1024)).toBe("2.00 MB");
+  });
+});
+
+describe("computeNextZoomLevel", () => {
+  it("steps cleanly relative to actual fitScale on large images", () => {
+    // Large 4000px image fitting at 22% (0.22)
+    expect(computeNextZoomLevel("fit", 0.22, 1)).toBe(0.25);
+    expect(computeNextZoomLevel("fit", 0.22, -1)).toBe(0.15);
+    expect(computeNextZoomLevel(0.25, 0.22, 1)).toBe(0.35);
+    expect(computeNextZoomLevel(0.25, 0.22, -1)).toBe(0.15);
+  });
+
+  it("clamps cleanly at minimum and maximum zoom bounds", () => {
+    expect(computeNextZoomLevel(0.1, 0.5, -1)).toBe(0.1);
+    expect(computeNextZoomLevel(3, 0.5, 1)).toBe(3);
   });
 });
 
