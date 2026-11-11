@@ -31,14 +31,14 @@ const CAPABILITY_CARDS = [
 export default function HomePage() {
   const intakeHero = (
     <div className="max-w-2xl space-y-3">
-      <div className="inline-flex items-center gap-1.5 rounded-full border border-[#166534] bg-[#052e16] px-3 py-1 text-[11px] font-medium text-[#4ade80]">
+      <div className="inline-flex items-center gap-1.5 rounded-full border border-[var(--green-tint-border)] bg-[var(--green-tint-bg)] px-3 py-1 text-[11px] font-medium text-[var(--green-tint-text)]">
         <ShieldCheck size={13} strokeWidth={1.75} aria-hidden="true" />
         No Sign-up · Local Browser Processing · Zero Uploads
       </div>
-      <h1 className="text-[28px] font-bold leading-tight tracking-[-0.04em] text-[#f5f5f5] sm:text-4xl">
+      <h1 className="text-[28px] font-bold leading-tight tracking-[-0.04em] text-[var(--text-primary)] sm:text-4xl">
         Redact screenshots &amp; clean metadata before you share.
       </h1>
-      <p className="text-sm leading-relaxed text-[#a3a3a3] sm:text-[15px]">
+      <p className="text-sm leading-relaxed text-[var(--text-secondary)] sm:text-[15px]">
         {APP_CONFIG.name} hides sensitive details with permanent solid cover or blur, removes
         common EXIF/GPS metadata, resizes, and compresses images—entirely in your browser.
       </p>
@@ -48,20 +48,23 @@ export default function HomePage() {
   const intakeFooter = (
     <section
       aria-labelledby="capabilities-heading"
-      className="space-y-5 border-t border-[#2e2e2e] pt-10"
+      className="space-y-5 border-t border-[var(--border-subtle)] pt-10"
     >
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 id="capabilities-heading" className="text-base font-semibold tracking-tight text-[#f5f5f5]">
+          <h2
+            id="capabilities-heading"
+            className="text-base font-semibold tracking-tight text-[var(--text-primary)]"
+          >
             Built for safer image sharing
           </h2>
-          <p className="mt-1 text-xs text-[#666666] sm:text-sm">
+          <p className="mt-1 text-xs text-[var(--text-muted)] sm:text-sm">
             Everything you need before posting receipts, chat screenshots, tickets, or photos.
           </p>
         </div>
         <Link
           href="/privacy"
-          className="text-xs font-medium text-[#4ade80] transition-colors hover:text-[#22c55e] hover:underline focus-visible:outline-2 focus-visible:outline-[#22c55e]"
+          className="text-xs font-medium text-[var(--green-tint-text)] transition-colors hover:text-[var(--accent-green)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--accent-green)]"
         >
           Read Privacy Scope &amp; FAQ →
         </Link>
@@ -73,13 +76,15 @@ export default function HomePage() {
           return (
             <article
               key={card.title}
-              className="rounded-xl border border-[#2e2e2e] bg-[#111111] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
+              className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-card)]"
             >
-              <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg border border-[#2e2e2e] bg-[#1a1a1a] text-[#4ade80]">
+              <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-2)] text-[var(--green-tint-text)]">
                 <Icon size={16} strokeWidth={1.75} aria-hidden="true" />
               </div>
-              <h3 className="text-sm font-semibold text-[#f5f5f5]">{card.title}</h3>
-              <p className="mt-1.5 text-xs leading-relaxed text-[#a3a3a3]">{card.body}</p>
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">{card.title}</h3>
+              <p className="mt-1.5 text-xs leading-relaxed text-[var(--text-secondary)]">
+                {card.body}
+              </p>
             </article>
           );
         })}
@@ -88,7 +93,7 @@ export default function HomePage() {
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#0a0a0a]">
+    <div className="flex min-h-screen flex-col bg-[var(--bg-page)]">
       <SiteHeader activePath="/" />
 
       <main id="main-content" className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8">

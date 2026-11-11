@@ -82,7 +82,7 @@ export function EditorToolbar({
   };
 
   return (
-    <div className="space-y-3 rounded-xl border border-[#2e2e2e] bg-[#111111] p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.5)] sm:px-4">
+    <div className="space-y-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-1)] p-3.5 shadow-[var(--shadow-card)] sm:px-4">
       <div className="flex flex-wrap items-center justify-between gap-2.5">
         {/* Left: Primary decision — Redaction Mode Toggle */}
         <div role="group" aria-label="Redaction tool" className="flex flex-wrap items-center gap-2">
@@ -90,10 +90,10 @@ export function EditorToolbar({
             type="button"
             aria-pressed={effectiveMode === "solid"}
             onClick={() => onChangeMode("solid")}
-            className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e] ${
+            className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-green)] ${
               effectiveMode === "solid"
-                ? "border-[#166534] bg-[#052e16] text-[#4ade80]"
-                : "border-[#2e2e2e] bg-[#1a1a1a] text-[#a3a3a3] hover:border-[#3d3d3d] hover:bg-[#242424] hover:text-[#f5f5f5]"
+                ? "border-[var(--green-tint-border)] bg-[var(--green-tint-bg)] text-[var(--green-tint-text)]"
+                : "border-[var(--border-subtle)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-3)] hover:text-[var(--text-primary)]"
             }`}
           >
             <Square size={14} strokeWidth={0} fill="currentColor" aria-hidden="true" />
@@ -101,8 +101,8 @@ export function EditorToolbar({
             <span
               className={`rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                 effectiveMode === "solid"
-                  ? "border-[#166534] bg-[#052e16] text-[#22c55e]"
-                  : "border-[#2e2e2e] bg-[#242424] text-[#a3a3a3]"
+                  ? "border-[var(--green-tint-border)] bg-[var(--green-tint-bg)] text-[var(--green-badge-text)]"
+                  : "border-[var(--border-subtle)] bg-[var(--surface-3)] text-[var(--text-secondary)]"
               }`}
             >
               Secure
@@ -113,10 +113,10 @@ export function EditorToolbar({
             type="button"
             aria-pressed={effectiveMode === "blur"}
             onClick={() => onChangeMode("blur")}
-            className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f59e0b] ${
+            className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-amber)] ${
               effectiveMode === "blur"
-                ? "border-[#92400e] bg-[#1c1200] text-[#fbbf24]"
-                : "border-[#2e2e2e] bg-[#1a1a1a] text-[#a3a3a3] hover:border-[#3d3d3d] hover:bg-[#242424] hover:text-[#f5f5f5]"
+                ? "border-[var(--amber-tint-border)] bg-[var(--amber-tint-bg)] text-[var(--amber-tint-text)]"
+                : "border-[var(--border-subtle)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-3)] hover:text-[var(--text-primary)]"
             }`}
           >
             <Layers size={14} strokeWidth={1.75} aria-hidden="true" />
@@ -124,8 +124,8 @@ export function EditorToolbar({
             <span
               className={`rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
                 effectiveMode === "blur"
-                  ? "border-[#92400e] bg-[#1c1200] text-[#f59e0b]"
-                  : "border-[#2e2e2e] bg-[#242424] text-[#a3a3a3]"
+                  ? "border-[var(--amber-tint-border)] bg-[var(--amber-tint-bg)] text-[var(--amber-badge-text)]"
+                  : "border-[var(--border-subtle)] bg-[var(--surface-3)] text-[var(--text-secondary)]"
               }`}
             >
               Visual Only
@@ -140,7 +140,7 @@ export function EditorToolbar({
             onClick={onAddCenteredBox}
             disabled={regionCount >= maxRegions}
             title="Keyboard-accessible alternative: insert a centered redaction box"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[#2e2e2e] bg-[#1a1a1a] px-2.5 py-1.5 text-xs font-medium text-[#a3a3a3] transition-all duration-150 hover:border-[#3d3d3d] hover:bg-[#242424] hover:text-[#f5f5f5] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e]"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-2)] px-2.5 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-all duration-150 hover:border-[var(--border-strong)] hover:bg-[var(--surface-3)] hover:text-[var(--text-primary)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-green)]"
           >
             <PlusSquare size={14} strokeWidth={1.75} aria-hidden="true" />
             Add Box
@@ -150,14 +150,14 @@ export function EditorToolbar({
             <button
               type="button"
               onClick={onDeleteSelected}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#7f1d1d] bg-[#1f0a0a] px-2.5 py-1.5 text-xs font-medium text-[#f87171] transition-all duration-150 hover:bg-[#2d0f0f] hover:text-[#fca5a5] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef4444]"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--red-tint-border)] bg-[var(--red-tint-bg)] px-2.5 py-1.5 text-xs font-medium text-[var(--red-tint-text)] transition-all duration-150 hover:bg-[var(--red-tint-hover)] hover:text-[var(--red-tint-strong)] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-red)]"
             >
               <Trash2 size={14} strokeWidth={1.75} aria-hidden="true" />
               Delete
             </button>
           )}
 
-          <div className="mx-0.5 hidden h-5 w-px bg-[#2e2e2e] sm:block" aria-hidden="true" />
+          <div className="mx-0.5 hidden h-5 w-px bg-[var(--border-subtle)] sm:block" aria-hidden="true" />
 
           <button
             type="button"
@@ -165,7 +165,7 @@ export function EditorToolbar({
             disabled={!canUndo}
             aria-label="Undo last edit"
             title="Undo (Ctrl/Cmd + Z)"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[#2e2e2e] bg-[#1a1a1a] px-2.5 py-1.5 text-xs font-medium text-[#a3a3a3] transition-all duration-150 hover:border-[#3d3d3d] hover:bg-[#242424] hover:text-[#f5f5f5] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e]"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-2)] px-2.5 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-all duration-150 hover:border-[var(--border-strong)] hover:bg-[var(--surface-3)] hover:text-[var(--text-primary)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-green)]"
           >
             <Undo2 size={14} strokeWidth={1.75} aria-hidden="true" />
             <span className="hidden sm:inline">Undo</span>
@@ -177,7 +177,7 @@ export function EditorToolbar({
             disabled={!canRedo}
             aria-label="Redo last edit"
             title="Redo (Ctrl/Cmd + Shift + Z)"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[#2e2e2e] bg-[#1a1a1a] px-2.5 py-1.5 text-xs font-medium text-[#a3a3a3] transition-all duration-150 hover:border-[#3d3d3d] hover:bg-[#242424] hover:text-[#f5f5f5] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e]"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-2)] px-2.5 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-all duration-150 hover:border-[var(--border-strong)] hover:bg-[var(--surface-3)] hover:text-[var(--text-primary)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-green)]"
           >
             <Redo2 size={14} strokeWidth={1.75} aria-hidden="true" />
             <span className="hidden sm:inline">Redo</span>
@@ -187,13 +187,13 @@ export function EditorToolbar({
             type="button"
             onClick={onResetAll}
             disabled={regionCount === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[#2e2e2e] bg-[#1a1a1a] px-2.5 py-1.5 text-xs font-medium text-[#a3a3a3] transition-all duration-150 hover:border-[#3d3d3d] hover:bg-[#242424] hover:text-[#f5f5f5] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e]"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-2)] px-2.5 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-all duration-150 hover:border-[var(--border-strong)] hover:bg-[var(--surface-3)] hover:text-[var(--text-primary)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-green)]"
           >
             <RotateCcw size={13} strokeWidth={1.75} aria-hidden="true" />
             Reset ({regionCount})
           </button>
 
-          <div className="mx-0.5 hidden h-5 w-px bg-[#2e2e2e] sm:block" aria-hidden="true" />
+          <div className="mx-0.5 hidden h-5 w-px bg-[var(--border-subtle)] sm:block" aria-hidden="true" />
 
           <div role="group" aria-label="Zoom controls" className="flex items-center gap-0.5">
             <button
@@ -201,7 +201,7 @@ export function EditorToolbar({
               onClick={() => stepZoom(-1)}
               disabled={isMinZoom}
               aria-label="Zoom out"
-              className="inline-flex items-center justify-center rounded-lg px-2 py-1.5 text-xs font-medium text-[#666666] transition-all duration-150 hover:bg-[#1a1a1a] hover:text-[#a3a3a3] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e]"
+              className="inline-flex items-center justify-center rounded-lg px-2 py-1.5 text-xs font-medium text-[var(--text-muted)] transition-all duration-150 hover:bg-[var(--surface-2)] hover:text-[var(--text-secondary)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-green)]"
             >
               <ZoomOut size={14} strokeWidth={1.75} aria-hidden="true" />
             </button>
@@ -209,10 +209,10 @@ export function EditorToolbar({
               type="button"
               onClick={() => onChangeZoom("fit")}
               title="Reset zoom to fit viewport"
-              className={`rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e] ${
+              className={`rounded-lg px-2 py-1.5 text-xs font-medium transition-all duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-green)] ${
                 zoom === "fit"
-                  ? "border border-[#2e2e2e] bg-[#1a1a1a] text-[#f5f5f5]"
-                  : "text-[#a3a3a3] hover:bg-[#1a1a1a] hover:text-[#f5f5f5]"
+                  ? "border border-[var(--border-subtle)] bg-[var(--surface-2)] text-[var(--text-primary)]"
+                  : "text-[var(--text-secondary)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
               }`}
             >
               {zoom === "fit" ? `Fit (${Math.round(fitScale * 100)}%)` : `${Math.round(zoom * 100)}%`}
@@ -222,18 +222,18 @@ export function EditorToolbar({
               onClick={() => stepZoom(1)}
               disabled={isMaxZoom}
               aria-label="Zoom in"
-              className="inline-flex items-center justify-center rounded-lg px-2 py-1.5 text-xs font-medium text-[#666666] transition-all duration-150 hover:bg-[#1a1a1a] hover:text-[#a3a3a3] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e]"
+              className="inline-flex items-center justify-center rounded-lg px-2 py-1.5 text-xs font-medium text-[var(--text-muted)] transition-all duration-150 hover:bg-[var(--surface-2)] hover:text-[var(--text-secondary)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-green)]"
             >
               <ZoomIn size={14} strokeWidth={1.75} aria-hidden="true" />
             </button>
           </div>
 
-          <div className="mx-0.5 hidden h-5 w-px bg-[#2e2e2e] sm:block" aria-hidden="true" />
+          <div className="mx-0.5 hidden h-5 w-px bg-[var(--border-subtle)] sm:block" aria-hidden="true" />
 
           <button
             type="button"
             onClick={onReplaceImage}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-[#666666] transition-all duration-150 hover:bg-[#1a1a1a] hover:text-[#a3a3a3] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e]"
+            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-[var(--text-muted)] transition-all duration-150 hover:bg-[var(--surface-2)] hover:text-[var(--text-secondary)] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-green)]"
           >
             <RefreshCw size={13} strokeWidth={1.75} aria-hidden="true" />
             New Image
@@ -242,10 +242,10 @@ export function EditorToolbar({
       </div>
 
       {/* Contextual sub-bar: Solid swatches or Blur intensity */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#2e2e2e] pt-3 text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border-subtle)] pt-3 text-xs">
         {effectiveMode === "solid" ? (
           <div className="flex flex-wrap items-center gap-2.5">
-            <span className="text-[#666666]">
+            <span className="text-[var(--text-muted)]">
               {selectedRegion ? "Selected fill:" : "Fill color:"}
             </span>
             <div className="flex items-center gap-1.5">
@@ -257,21 +257,21 @@ export function EditorToolbar({
                   aria-pressed={effectiveColor === swatch.hex}
                   onClick={() => onChangeColor(swatch.hex)}
                   style={{ backgroundColor: swatch.hex }}
-                  className={`h-6 w-6 rounded-md border transition-all duration-150 active:scale-[0.95] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e] ${
+                  className={`h-6 w-6 rounded-md border transition-all duration-150 active:scale-[0.95] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-green)] ${
                     effectiveColor === swatch.hex
-                      ? "border-[#22c55e] ring-2 ring-[#22c55e]/35"
-                      : "border-[#3d3d3d] hover:border-[#a3a3a3]"
+                      ? "border-[var(--accent-green)] ring-2 ring-[var(--accent-green)]/35"
+                      : "border-[var(--border-strong)] hover:border-[var(--text-secondary)]"
                   }`}
                 />
               ))}
             </div>
-            <span className="text-[#a3a3a3]">
+            <span className="text-[var(--text-secondary)]">
               Recommended for passwords, account IDs, phone numbers, and text.
             </span>
           </div>
         ) : (
           <div className="flex flex-wrap items-center gap-2.5">
-            <span className="text-[#666666]">
+            <span className="text-[var(--text-muted)]">
               {selectedRegion ? "Selected blur:" : "Intensity:"}
             </span>
             <div className="flex items-center gap-1.5">
@@ -281,17 +281,17 @@ export function EditorToolbar({
                   type="button"
                   aria-pressed={effectiveBlur === lvl}
                   onClick={() => onChangeBlurStrength(lvl)}
-                  className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-all duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-[#f59e0b] ${
+                  className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-all duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-[var(--accent-amber)] ${
                     effectiveBlur === lvl
-                      ? "border-[#92400e] bg-[#1c1200] text-[#fbbf24]"
-                      : "border-[#2e2e2e] bg-[#1a1a1a] text-[#a3a3a3] hover:border-[#3d3d3d] hover:text-[#f5f5f5]"
+                      ? "border-[var(--amber-tint-border)] bg-[var(--amber-tint-bg)] text-[var(--amber-tint-text)]"
+                      : "border-[var(--border-subtle)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
                   }`}
                 >
                   {lvl === 1 ? "Light" : lvl === 2 ? "Medium" : "Strong"}
                 </button>
               ))}
             </div>
-            <span className="inline-flex items-center gap-1.5 text-[#fbbf24]">
+            <span className="inline-flex items-center gap-1.5 text-[var(--amber-tint-text)]">
               <AlertTriangle size={13} strokeWidth={1.75} aria-hidden="true" />
               Blur reduces legibility visually — use Solid Cover for sensitive secrets.
             </span>

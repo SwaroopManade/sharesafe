@@ -168,7 +168,6 @@ export function EditorCanvas({
     };
   }, []);
 
-  // Preserve viewport center proportionally when zoom level changes (never trapping negative top/left scroll)
   useLayoutEffect(() => {
     const el = viewportRef.current;
     if (!el || prevZoomRef.current === zoom) return;
@@ -412,7 +411,7 @@ export function EditorCanvas({
     <div
       ref={viewportRef}
       onScroll={handleViewportScroll}
-      className="relative h-[56vh] min-h-[340px] max-h-[74vh] w-full overflow-auto rounded-xl border border-[#2e2e2e] bg-[#0a0a0a] bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] [background-size:20px_20px] shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
+      className="relative h-[56vh] min-h-[340px] max-h-[74vh] w-full overflow-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-page)] bg-[radial-gradient(var(--canvas-dot)_1px,transparent_1px)] [background-size:20px_20px] shadow-[var(--shadow-card)]"
     >
       <div className="flex min-h-full min-w-full p-4">
         <div
@@ -425,7 +424,7 @@ export function EditorCanvas({
           onPointerUp={finishInteraction}
           onPointerCancel={finishInteraction}
           style={{ width: `${displayWidth}px`, height: `${displayHeight}px` }}
-          className="relative m-auto shrink-0 cursor-crosshair touch-none select-none rounded-sm shadow-[0_4px_12px_rgba(0,0,0,0.6),0_1px_3px_rgba(0,0,0,0.4)] ring-1 ring-[#2e2e2e] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#22c55e]"
+          className="relative m-auto shrink-0 cursor-crosshair touch-none select-none rounded-sm shadow-[var(--shadow-elevated)] ring-1 ring-[var(--border-strong)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent-green)]"
         >
           <canvas
             ref={canvasRef}
@@ -454,13 +453,13 @@ export function EditorCanvas({
                   height: `${region.height * 100}%`,
                 }}
                 className={`absolute box-border cursor-move transition-[box-shadow,ring-color] duration-150 ${
-                  isBlurDraft ? "bg-white/10 backdrop-blur-md" : ""
+                  isBlurDraft ? "bg-white/15 backdrop-blur-md" : ""
                 } ${
                   isSelected
                     ? isSolid
-                      ? "ring-2 ring-[#22c55e] ring-offset-1 ring-offset-[#0a0a0a]"
-                      : "ring-2 ring-[#f59e0b] ring-offset-1 ring-offset-[#0a0a0a]"
-                    : "ring-1 ring-white/25 hover:ring-[#a3a3a3]"
+                      ? "ring-2 ring-[var(--accent-green)] ring-offset-1 ring-offset-[var(--bg-page)]"
+                      : "ring-2 ring-[var(--accent-amber)] ring-offset-1 ring-offset-[var(--bg-page)]"
+                    : "ring-1 ring-black/40 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.45)] hover:ring-[var(--text-secondary)]"
                 }`}
               >
                 {isSelected && (
@@ -470,8 +469,8 @@ export function EditorCanvas({
                         badgeInsideTop ? "left-1.5 top-1.5" : "-top-6 left-0"
                       } ${
                         isSolid
-                          ? "border-[#166534] bg-[#052e16] text-[#4ade80]"
-                          : "border-[#92400e] bg-[#1c1200] text-[#fbbf24]"
+                          ? "border-[var(--green-tint-border)] bg-[var(--green-tint-bg)] text-[var(--green-tint-text)]"
+                          : "border-[var(--amber-tint-border)] bg-[var(--amber-tint-bg)] text-[var(--amber-tint-text)]"
                       }`}
                     >
                       {isSolid ? "SOLID" : "BLUR"}
@@ -483,11 +482,11 @@ export function EditorCanvas({
                         type="button"
                         aria-label={h.label}
                         onPointerDown={(e) => handleResizePointerDown(e, region, h.handle)}
-                        className={`absolute z-10 flex h-6 w-6 items-center justify-center ${h.positionClass} ${h.cursorClass} focus-visible:outline-2 focus-visible:outline-[#22c55e]`}
+                        className={`absolute z-10 flex h-6 w-6 items-center justify-center ${h.positionClass} ${h.cursorClass} focus-visible:outline-2 focus-visible:outline-[var(--accent-green)]`}
                       >
                         <span
-                          className={`h-2.5 w-2.5 rounded-xs border border-[#0a0a0a] shadow ${
-                            isSolid ? "bg-[#22c55e]" : "bg-[#f59e0b]"
+                          className={`h-2.5 w-2.5 rounded-xs border border-[#09090b] shadow ${
+                            isSolid ? "bg-[var(--accent-green)]" : "bg-[var(--accent-amber)]"
                           }`}
                         />
                       </button>

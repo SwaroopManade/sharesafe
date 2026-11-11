@@ -42,7 +42,7 @@ export function IntakeDropzone({
           setIsDragOver(false);
           handleFiles(e.dataTransfer.files);
         }}
-        className="relative flex min-h-[54vh] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#2e2e2e] bg-[#111111] px-6 py-14 text-center shadow-[0_1px_2px_rgba(0,0,0,0.5)] transition-all duration-200 hover:border-[#3d3d3d] data-[drag-over=true]:border-[#166534] data-[drag-over=true]:bg-[#052e16]"
+        className="relative flex min-h-[54vh] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--border-subtle)] bg-[var(--surface-1)] px-6 py-14 text-center shadow-[var(--shadow-card)] transition-all duration-200 hover:border-[var(--border-strong)] data-[drag-over=true]:border-[var(--green-tint-border)] data-[drag-over=true]:bg-[var(--green-tint-bg)]"
       >
         <input
           ref={inputRef}
@@ -56,18 +56,28 @@ export function IntakeDropzone({
           }}
         />
 
-        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-[#2e2e2e] bg-[#1a1a1a] shadow-[0_4px_12px_rgba(0,0,0,0.6)]">
+        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-2)] shadow-[var(--shadow-elevated)]">
           {isLoading ? (
-            <Loader2 size={28} strokeWidth={1.5} className="animate-spin text-[#4ade80]" aria-hidden="true" />
+            <Loader2
+              size={28}
+              strokeWidth={1.5}
+              className="animate-spin text-[var(--green-tint-text)]"
+              aria-hidden="true"
+            />
           ) : (
-            <Upload size={28} strokeWidth={1.5} className="text-[#4ade80]" aria-hidden="true" />
+            <Upload
+              size={28}
+              strokeWidth={1.5}
+              className="text-[var(--green-tint-text)]"
+              aria-hidden="true"
+            />
           )}
         </div>
 
-        <h2 className="text-xl font-semibold tracking-tight text-[#f5f5f5]">
+        <h2 className="text-xl font-semibold tracking-tight text-[var(--text-primary)]">
           {isLoading ? "Decoding image locally..." : "Drop your image here"}
         </h2>
-        <p className="mt-2 max-w-sm text-sm leading-relaxed text-[#a3a3a3]">
+        <p className="mt-2 max-w-sm text-sm leading-relaxed text-[var(--text-secondary)]">
           Or choose a file from your device. Everything runs in browser memory — nothing ever
           leaves this tab.
         </p>
@@ -77,7 +87,7 @@ export function IntakeDropzone({
             type="button"
             disabled={isLoading}
             onClick={() => inputRef.current?.click()}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#22c55e] px-5 py-2.5 text-sm font-semibold text-[#0a0a0a] transition-all duration-150 hover:bg-[#16a34a] hover:shadow-[0_0_20px_rgba(34,197,94,0.2)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e]"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--accent-green)] px-5 py-2.5 text-sm font-semibold text-[var(--text-inverse)] transition-all duration-150 hover:bg-[var(--accent-green-hover)] hover:shadow-[var(--shadow-glow-green)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-green)]"
           >
             <Upload size={16} strokeWidth={1.75} aria-hidden="true" />
             {isLoading ? "Processing..." : "Choose Image"}
@@ -88,7 +98,7 @@ export function IntakeDropzone({
               type="button"
               disabled={isLoading}
               onClick={onPasteRequest}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#2e2e2e] bg-[#1a1a1a] px-4 py-2.5 text-sm font-medium text-[#a3a3a3] transition-all duration-150 hover:border-[#3d3d3d] hover:bg-[#242424] hover:text-[#f5f5f5] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e]"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-2)] px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] transition-all duration-150 hover:border-[var(--border-strong)] hover:bg-[var(--surface-3)] hover:text-[var(--text-primary)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-green)]"
             >
               <Clipboard size={15} strokeWidth={1.75} aria-hidden="true" />
               Paste from Clipboard
@@ -96,8 +106,8 @@ export function IntakeDropzone({
           )}
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-xs text-[#666666]">
-          <span className="inline-flex items-center gap-1 text-[#4ade80]">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-xs text-[var(--text-muted)]">
+          <span className="inline-flex items-center gap-1 text-[var(--green-tint-text)]">
             <ShieldCheck size={13} strokeWidth={1.75} aria-hidden="true" />
             Zero server upload
           </span>
@@ -110,7 +120,7 @@ export function IntakeDropzone({
           <span aria-hidden="true">·</span>
           <span>
             Press{" "}
-            <kbd className="rounded border border-[#2e2e2e] bg-[#1a1a1a] px-1.5 py-0.5 text-[11px] text-[#a3a3a3]">
+            <kbd className="rounded border border-[var(--border-subtle)] bg-[var(--surface-2)] px-1.5 py-0.5 text-[11px] text-[var(--text-secondary)]">
               Ctrl/⌘ + V
             </kbd>
           </span>
@@ -120,11 +130,11 @@ export function IntakeDropzone({
       {errorMessage && (
         <div
           role="alert"
-          className="animate-banner-in flex items-start gap-2.5 rounded-lg border border-[#7f1d1d] bg-[#1f0a0a] px-4 py-3 text-xs text-[#f87171]"
+          className="animate-banner-in flex items-start gap-2.5 rounded-lg border border-[var(--red-tint-border)] bg-[var(--red-tint-bg)] px-4 py-3 text-xs text-[var(--red-tint-text)]"
         >
           <AlertTriangle size={15} strokeWidth={1.75} className="mt-0.5 shrink-0" aria-hidden="true" />
           <div>
-            <strong className="font-semibold text-[#fca5a5]">Could not load image: </strong>
+            <strong className="font-semibold text-[var(--red-tint-strong)]">Could not load image: </strong>
             {errorMessage}
           </div>
         </div>

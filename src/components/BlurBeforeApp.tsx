@@ -77,7 +77,6 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
   const regions = history.present;
   const selectedRegion = regions.find((r) => r.id === selectedRegionId) ?? null;
 
-  // Close transient preview modal cleanly if user navigates away and returns via history
   useEffect(() => {
     return () => {
       clearExportResult();
@@ -95,7 +94,6 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
     [session, regions.length, loadFile],
   );
 
-  // Global clipboard paste support (FR-012) while Editor is mounted
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
       const items = e.clipboardData?.items;
@@ -115,7 +113,6 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
     return () => window.removeEventListener("paste", handlePaste);
   }, [requestFileLoad]);
 
-  // Keyboard shortcuts for Undo/Redo, Delete, and arrow-key region nudging (NFR-016)
   useEffect(() => {
     if (!session) return;
 
@@ -232,7 +229,7 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
       {transientNotice && (
         <div
           role="status"
-          className="animate-banner-in flex items-center justify-between gap-3 rounded-lg border border-[#92400e] bg-[#1c1200] px-4 py-2.5 text-xs text-[#fbbf24]"
+          className="animate-banner-in flex items-center justify-between gap-3 rounded-lg border border-[var(--amber-tint-border)] bg-[var(--amber-tint-bg)] px-4 py-2.5 text-xs text-[var(--amber-tint-text)]"
         >
           <div className="flex items-center gap-2">
             <AlertTriangle size={14} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />
@@ -242,7 +239,7 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
             type="button"
             aria-label="Dismiss notice"
             onClick={() => setTransientNotice(null)}
-            className="rounded p-0.5 text-[#f59e0b] transition-colors hover:text-[#fbbf24] focus-visible:outline-2 focus-visible:outline-[#f59e0b]"
+            className="rounded p-0.5 text-[var(--amber-badge-text)] transition-colors hover:text-[var(--amber-tint-text)] focus-visible:outline-2 focus-visible:outline-[var(--accent-amber)]"
           >
             <X size={14} strokeWidth={1.75} aria-hidden="true" />
           </button>
@@ -252,7 +249,7 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
       {intakeError && (
         <div
           role="alert"
-          className="animate-banner-in flex items-center justify-between gap-3 rounded-lg border border-[#7f1d1d] bg-[#1f0a0a] px-4 py-2.5 text-xs text-[#f87171]"
+          className="animate-banner-in flex items-center justify-between gap-3 rounded-lg border border-[var(--red-tint-border)] bg-[var(--red-tint-bg)] px-4 py-2.5 text-xs text-[var(--red-tint-text)]"
         >
           <div className="flex items-center gap-2">
             <AlertTriangle size={14} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />
@@ -262,7 +259,7 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
             type="button"
             aria-label="Dismiss error"
             onClick={clearIntakeError}
-            className="rounded p-0.5 text-[#f87171] transition-colors hover:text-[#fca5a5] focus-visible:outline-2 focus-visible:outline-[#ef4444]"
+            className="rounded p-0.5 text-[var(--red-tint-text)] transition-colors hover:text-[var(--red-tint-strong)] focus-visible:outline-2 focus-visible:outline-[var(--accent-red)]"
           >
             <X size={14} strokeWidth={1.75} aria-hidden="true" />
           </button>
@@ -286,25 +283,28 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
           />
 
           {/* Status bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#2e2e2e] bg-[#111111] px-4 py-2.5 text-xs text-[#666666]">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-1)] px-4 py-2.5 text-xs text-[var(--text-muted)] shadow-[var(--shadow-card)]">
             <div className="flex min-w-0 items-center gap-2.5">
-              <span className="max-w-[200px] truncate font-medium text-[#a3a3a3]" title={session.filename}>
+              <span
+                className="max-w-[200px] truncate font-medium text-[var(--text-secondary)]"
+                title={session.filename}
+              >
                 {session.filename}
               </span>
-              <span className="text-[#2e2e2e]" aria-hidden="true">
+              <span className="text-[var(--border-strong)]" aria-hidden="true">
                 ·
               </span>
               <span>
                 {session.decoded.width} × {session.decoded.height}
               </span>
-              <span className="text-[#2e2e2e]" aria-hidden="true">
+              <span className="text-[var(--border-strong)]" aria-hidden="true">
                 ·
               </span>
               <span>{formatByteSize(session.byteSize)}</span>
             </div>
-            <div className="shrink-0 text-[#666666]">
+            <div className="shrink-0 text-[var(--text-muted)]">
               ↑↓←→ nudge ·{" "}
-              <kbd className="rounded border border-[#2e2e2e] bg-[#1a1a1a] px-1 text-[11px] text-[#a3a3a3]">
+              <kbd className="rounded border border-[var(--border-subtle)] bg-[var(--surface-2)] px-1 text-[11px] text-[var(--text-secondary)]">
                 Del
               </kbd>{" "}
               remove · edits in memory only
@@ -313,8 +313,8 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
 
           {/* Region chips */}
           {regions.length > 0 && (
-            <div className="rounded-xl border border-[#2e2e2e] bg-[#111111] p-3">
-              <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-[#666666]">
+            <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-1)] p-3 shadow-[var(--shadow-card)]">
+              <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
                 Regions ({regions.length})
               </p>
               <div className="flex flex-wrap gap-1.5">
@@ -327,15 +327,15 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
                       className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-all duration-150 ${
                         selected
                           ? isSolid
-                            ? "border-[#166534] bg-[#052e16] text-[#4ade80]"
-                            : "border-[#92400e] bg-[#1c1200] text-[#fbbf24]"
-                          : "border-[#2e2e2e] bg-[#1a1a1a] text-[#666666] hover:border-[#3d3d3d] hover:text-[#a3a3a3]"
+                            ? "border-[var(--green-tint-border)] bg-[var(--green-tint-bg)] text-[var(--green-tint-text)]"
+                            : "border-[var(--amber-tint-border)] bg-[var(--amber-tint-bg)] text-[var(--amber-tint-text)]"
+                          : "border-[var(--border-subtle)] bg-[var(--surface-2)] text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text-secondary)]"
                       }`}
                     >
                       <button
                         type="button"
                         onClick={() => selectRegion(r.id)}
-                        className="transition-colors focus-visible:outline-2 focus-visible:outline-[#22c55e]"
+                        className="transition-colors focus-visible:outline-2 focus-visible:outline-[var(--accent-green)]"
                       >
                         #{idx + 1} {isSolid ? "Solid" : "Blur"}
                       </button>
@@ -346,7 +346,7 @@ export function BlurBeforeApp({ intakeHero, intakeFooter }: BlurBeforeAppProps) 
                           const next = regions.filter((item) => item.id !== r.id);
                           commitRegions(next, selected ? null : selectedRegionId);
                         }}
-                        className="ml-0.5 rounded p-0.5 opacity-60 transition-opacity hover:opacity-100 focus-visible:outline-2 focus-visible:outline-[#22c55e]"
+                        className="ml-0.5 rounded p-0.5 opacity-60 transition-opacity hover:opacity-100 focus-visible:outline-2 focus-visible:outline-[var(--accent-green)]"
                       >
                         <X size={11} strokeWidth={2} aria-hidden="true" />
                       </button>

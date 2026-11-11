@@ -43,7 +43,7 @@ const FAQ_ITEMS = [
 
 export default function PrivacyPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-[#0a0a0a]">
+    <div className="flex min-h-screen flex-col bg-[var(--bg-page)]">
       <SiteHeader activePath="/privacy" />
 
       <main
@@ -53,38 +53,38 @@ export default function PrivacyPage() {
         <div className="space-y-3">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#4ade80] transition-colors hover:text-[#22c55e] hover:underline focus-visible:outline-2 focus-visible:outline-[#22c55e]"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--green-tint-text)] transition-colors hover:text-[var(--accent-green)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--accent-green)]"
           >
             <ArrowLeft size={14} strokeWidth={1.75} aria-hidden="true" />
             Back to {APP_CONFIG.name} Editor
           </Link>
-          <h1 className="text-2xl font-bold tracking-[-0.03em] text-[#f5f5f5] sm:text-3xl">
+          <h1 className="text-2xl font-bold tracking-[-0.03em] text-[var(--text-primary)] sm:text-3xl">
             Privacy Scope, Redaction Guide &amp; FAQ
           </h1>
-          <p className="text-sm leading-relaxed text-[#a3a3a3]">
+          <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
             Clear technical details on how {APP_CONFIG.name} handles your files, what metadata
             cleaning covers, and best practices for irreversible redaction.
           </p>
         </div>
 
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-xl border border-[#166534] bg-[#052e16] p-5">
-            <div className="flex items-center gap-2 text-sm font-semibold text-[#4ade80]">
+          <div className="rounded-xl border border-[var(--green-tint-border)] bg-[var(--green-tint-bg)] p-5">
+            <div className="flex items-center gap-2 text-sm font-semibold text-[var(--green-tint-text)]">
               <ShieldCheck size={16} strokeWidth={1.75} aria-hidden="true" />
               <h2>Recommended: Solid Cover</h2>
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-[#a3a3a3]">
+            <p className="mt-2 text-xs leading-relaxed text-[var(--text-secondary)]">
               Replaces every pixel inside the selected rectangle with a single opaque color and
               flattens the final export. Ideal for emails, phone numbers, financial totals, and IDs.
             </p>
           </div>
 
-          <div className="rounded-xl border border-[#92400e] bg-[#1c1200] p-5">
-            <div className="flex items-center gap-2 text-sm font-semibold text-[#fbbf24]">
+          <div className="rounded-xl border border-[var(--amber-tint-border)] bg-[var(--amber-tint-bg)] p-5">
+            <div className="flex items-center gap-2 text-sm font-semibold text-[var(--amber-tint-text)]">
               <AlertTriangle size={16} strokeWidth={1.75} aria-hidden="true" />
               <h2>Visual Treatment: Blur</h2>
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-[#a3a3a3]">
+            <p className="mt-2 text-xs leading-relaxed text-[var(--text-secondary)]">
               Applies deterministic isolated pixel blurring to obscure faces or low-sensitivity
               context. Never rely on blur alone when short digits or text must remain unrecoverable.
             </p>
@@ -92,17 +92,22 @@ export default function PrivacyPage() {
         </section>
 
         <section aria-labelledby="faq-heading" className="space-y-4">
-          <h2 id="faq-heading" className="text-base font-semibold tracking-tight text-[#f5f5f5]">
+          <h2
+            id="faq-heading"
+            className="text-base font-semibold tracking-tight text-[var(--text-primary)]"
+          >
             Frequently Asked Questions
           </h2>
           <div className="space-y-3">
             {FAQ_ITEMS.map((item) => (
               <article
                 key={item.q}
-                className="rounded-xl border border-[#2e2e2e] bg-[#111111] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
+                className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-1)] p-5 shadow-[var(--shadow-card)]"
               >
-                <h3 className="text-sm font-semibold text-[#f5f5f5]">{item.q}</h3>
-                <p className="mt-2 text-xs leading-relaxed text-[#a3a3a3] sm:text-[13px]">{item.a}</p>
+                <h3 className="text-sm font-semibold text-[var(--text-primary)]">{item.q}</h3>
+                <p className="mt-2 text-xs leading-relaxed text-[var(--text-secondary)] sm:text-[13px]">
+                  {item.a}
+                </p>
               </article>
             ))}
           </div>

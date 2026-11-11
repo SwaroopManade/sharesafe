@@ -57,18 +57,26 @@ export function ExportPreviewModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="export-preview-title"
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/85 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-[var(--backdrop-modal)] p-0 backdrop-blur-sm sm:items-center sm:p-4"
     >
-      <div className="animate-modal-in flex max-h-[95vh] w-full flex-col overflow-hidden rounded-t-2xl border border-[#2e2e2e] bg-[#111111] shadow-[0_8px_32px_rgba(0,0,0,0.7),0_2px_8px_rgba(0,0,0,0.5)] sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl">
+      <div className="animate-modal-in flex max-h-[95vh] w-full flex-col overflow-hidden rounded-t-2xl border border-[var(--border-subtle)] bg-[var(--surface-1)] shadow-[var(--shadow-modal)] sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#2e2e2e] px-5 py-4">
+        <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-5 py-4">
           <div className="flex items-center gap-2.5">
-            <CheckCircle2 size={18} strokeWidth={1.75} className="shrink-0 text-[#22c55e]" aria-hidden="true" />
+            <CheckCircle2
+              size={18}
+              strokeWidth={1.75}
+              className="shrink-0 text-[var(--accent-green)]"
+              aria-hidden="true"
+            />
             <div>
-              <h2 id="export-preview-title" className="text-sm font-semibold text-[#f5f5f5]">
+              <h2
+                id="export-preview-title"
+                className="text-sm font-semibold text-[var(--text-primary)]"
+              >
                 Export Ready
               </h2>
-              <p className="text-xs text-[#4ade80]">
+              <p className="text-xs text-[var(--green-tint-text)]">
                 Redactions baked into pixels · Common EXIF/GPS metadata stripped
               </p>
             </div>
@@ -78,56 +86,65 @@ export function ExportPreviewModal({
             type="button"
             aria-label="Close preview"
             onClick={onClose}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#666666] transition-all duration-150 hover:bg-[#1a1a1a] hover:text-[#f5f5f5] focus-visible:outline-2 focus-visible:outline-[#22c55e]"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-muted)] transition-all duration-150 hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)] focus-visible:outline-2 focus-visible:outline-[var(--accent-green)]"
           >
             <X size={16} strokeWidth={1.75} aria-hidden="true" />
           </button>
         </div>
 
         {/* Preview area */}
-        <div className="flex flex-1 items-center justify-center overflow-auto bg-[#0a0a0a] bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] [background-size:20px_20px] p-4">
+        <div className="flex flex-1 items-center justify-center overflow-auto bg-[var(--bg-page)] bg-[radial-gradient(var(--canvas-dot)_1px,transparent_1px)] [background-size:20px_20px] p-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={previewUrl}
             alt="Preview of flattened redacted export"
-            className="max-h-[46vh] rounded border border-[#2e2e2e] object-contain shadow-[0_4px_12px_rgba(0,0,0,0.6)]"
+            className="max-h-[46vh] rounded border border-[var(--border-subtle)] object-contain shadow-[var(--shadow-elevated)]"
           />
         </div>
 
         {/* Stats + Download actions */}
-        <div className="space-y-4 border-t border-[#2e2e2e] bg-[#111111] px-5 py-4">
+        <div className="space-y-4 border-t border-[var(--border-subtle)] bg-[var(--surface-1)] px-5 py-4">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <div className="rounded-lg border border-[#2e2e2e] bg-[#1a1a1a] p-2.5 text-xs">
-              <span className="block text-[11px] text-[#666666]">Dimensions</span>
-              <span className="mt-0.5 block font-medium text-[#f5f5f5]">
+            <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-2)] p-2.5 text-xs">
+              <span className="block text-[11px] text-[var(--text-muted)]">Dimensions</span>
+              <span className="mt-0.5 block font-medium text-[var(--text-primary)]">
                 {result.width} × {result.height}
               </span>
             </div>
-            <div className="rounded-lg border border-[#2e2e2e] bg-[#1a1a1a] p-2.5 text-xs">
-              <span className="block text-[11px] text-[#666666]">Output Size</span>
-              <span className="mt-0.5 block font-medium text-[#f5f5f5]">
+            <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-2)] p-2.5 text-xs">
+              <span className="block text-[11px] text-[var(--text-muted)]">Output Size</span>
+              <span className="mt-0.5 block font-medium text-[var(--text-primary)]">
                 {formatByteSize(result.byteSize)}{" "}
-                <span className={sizeDeltaPct <= 0 ? "text-[#4ade80]" : "text-[#a3a3a3]"}>
+                <span
+                  className={
+                    sizeDeltaPct <= 0
+                      ? "text-[var(--green-tint-text)]"
+                      : "text-[var(--text-secondary)]"
+                  }
+                >
                   ({sizeDeltaPct > 0 ? `+${sizeDeltaPct}%` : `${sizeDeltaPct}%`})
                 </span>
               </span>
             </div>
-            <div className="rounded-lg border border-[#2e2e2e] bg-[#1a1a1a] p-2.5 text-xs">
-              <span className="block text-[11px] text-[#666666]">Format</span>
-              <span className="mt-0.5 block font-medium text-[#f5f5f5]">
+            <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-2)] p-2.5 text-xs">
+              <span className="block text-[11px] text-[var(--text-muted)]">Format</span>
+              <span className="mt-0.5 block font-medium text-[var(--text-primary)]">
                 {APP_CONFIG.mimeToLabel[result.mimeType]}
               </span>
             </div>
-            <div className="rounded-lg border border-[#2e2e2e] bg-[#1a1a1a] p-2.5 text-xs">
-              <span className="block text-[11px] text-[#666666]">Filename</span>
-              <span className="mt-0.5 block truncate font-medium text-[#f5f5f5]" title={result.filename}>
+            <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-2)] p-2.5 text-xs">
+              <span className="block text-[11px] text-[var(--text-muted)]">Filename</span>
+              <span
+                className="mt-0.5 block truncate font-medium text-[var(--text-primary)]"
+                title={result.filename}
+              >
                 {result.filename}
               </span>
             </div>
           </div>
 
           {result.alphaFlattenedToBackground && (
-            <p className="text-xs text-[#fbbf24]">
+            <p className="text-xs text-[var(--amber-tint-text)]">
               Transparent areas were flattened onto a white background for JPEG compatibility.
             </p>
           )}
@@ -135,12 +152,15 @@ export function ExportPreviewModal({
           {downloaded && (
             <div
               role="status"
-              className="animate-banner-in flex items-center gap-2 rounded-lg border border-[#166534] bg-[#052e16] px-3.5 py-2.5 text-xs text-[#4ade80]"
+              className="animate-banner-in flex items-center gap-2 rounded-lg border border-[var(--green-tint-border)] bg-[var(--green-tint-bg)] px-3.5 py-2.5 text-xs text-[var(--green-tint-text)]"
             >
               <CheckCircle2 size={14} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />
               <span>
                 Your image is ready to share safely — download started for{" "}
-                <strong className="font-semibold text-[#f5f5f5]">{result.filename}</strong>.
+                <strong className="font-semibold text-[var(--text-primary)]">
+                  {result.filename}
+                </strong>
+                .
               </span>
             </div>
           )}
@@ -149,7 +169,7 @@ export function ExportPreviewModal({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex items-center justify-center rounded-lg border border-[#2e2e2e] bg-[#1a1a1a] px-4 py-2 text-xs font-medium text-[#a3a3a3] transition-all duration-150 hover:border-[#3d3d3d] hover:bg-[#242424] hover:text-[#f5f5f5] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e]"
+              className="inline-flex items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-2)] px-4 py-2 text-xs font-medium text-[var(--text-secondary)] transition-all duration-150 hover:border-[var(--border-strong)] hover:bg-[var(--surface-3)] hover:text-[var(--text-primary)] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-green)]"
             >
               Continue Editing
             </button>
@@ -157,7 +177,7 @@ export function ExportPreviewModal({
               href={previewUrl}
               download={result.filename}
               onClick={() => setDownloaded(true)}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#22c55e] px-5 py-2.5 text-sm font-semibold text-[#0a0a0a] transition-all duration-150 hover:bg-[#16a34a] hover:shadow-[0_0_20px_rgba(34,197,94,0.2)] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#22c55e]"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--accent-green)] px-5 py-2.5 text-sm font-semibold text-[var(--text-inverse)] transition-all duration-150 hover:bg-[var(--accent-green-hover)] hover:shadow-[var(--shadow-glow-green)] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-green)]"
             >
               <Download size={16} strokeWidth={1.75} aria-hidden="true" />
               Download {APP_CONFIG.mimeToLabel[result.mimeType]}
